@@ -1,5 +1,5 @@
 """
-Nicotine exposure estimation — first-order exponential decay.
+Nicotine exposure estimation - first-order exponential decay.
 
 C(t) = C0 * e^(-k*t)
 k = ln(2) / half_life
@@ -54,8 +54,9 @@ def exposure_series(cig_timestamps: list[datetime], hours_back: int = 12,
             hours_since = (t - ts).total_seconds() / 3600
             if 0 <= hours_since <= 24:
                 total += _single_cig_contribution(hours_since)
+        hour_12 = t.strftime("%I").lstrip("0") or "12"  # cross-platform: works on Windows and Linux/Mac
         points.append({
-            "time": t.strftime("%-I%p").lower(),
+            "time": (hour_12 + t.strftime("%p")).lower(),
             "value": round(min(total, 100.0), 1),
         })
     return points

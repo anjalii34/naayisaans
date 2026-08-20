@@ -82,7 +82,7 @@ def checkins_today(
         )
         result.append({
             "type": log.type,
-            "time": log.timestamp.strftime("%-I:%M %p"),
+            "time": (log.timestamp.strftime("%I").lstrip("0") or "12") + log.timestamp.strftime(":%M %p"),
             "desc": desc,
         })
     return {"history": result}

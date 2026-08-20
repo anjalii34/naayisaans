@@ -40,6 +40,6 @@ def get_timeline(
             "type": TYPE_MAP.get(e.event_type, "checkin"),
             "title": e.title,
             "desc": e.description,
-            "time": e.timestamp.strftime("%-I:%M %p"),
+            "time": (e.timestamp.strftime("%I").lstrip("0") or "12") + e.timestamp.strftime(":%M %p"),
         })
     return {"entries": entries}

@@ -6,9 +6,10 @@ FastAPI backend for the NayiSaans (RecoveryTwin) cigarette-recovery app. Matches
 
 ```bash
 python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+        
+Windows: venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 
 Runs on SQLite by default (`nayisaans.db`, created automatically) — no setup needed for local dev/demo. To use Postgres, copy `.env.example` to `.env`, set `DATABASE_URL`, and load it (e.g. `python-dotenv` or export manually) before starting.

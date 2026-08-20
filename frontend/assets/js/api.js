@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000"; // ← update to your deployed backend URL
+const API_BASE_URL = "http://localhost:8001"; // ← update to your deployed backend URL
 
 const DEMO_MODE = false;
 
