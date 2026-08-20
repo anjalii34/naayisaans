@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell narrow">
+  <div class="page-head">
+    <div class="eyebrow">Your account</div>
+    <h1>Profile & Settings</h1>
+    <p>This demo uses a fictional profile — data export/deletion below are real actions.</p>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>About you</h3></div>
+    <div class="settings-row"><div><div class="settings-row-label" id="profileName">--</div><div class="settings-row-sub" id="profileEmail">--</div></div></div>
+    <div class="settings-row"><div><div class="settings-row-label">Quit reason</div><div class="settings-row-sub" id="quitReason">Not set</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>Preferences</h3></div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Daily reminders</div>
+        <div class="settings-row-sub">Notify me to check in each day</div>
+      </div>
+      <div class="toggle" id="notifToggle" onclick="toggleSetting('notifications_enabled', this)"></div>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Share analytics with my twin</div>
+        <div class="settings-row-sub">Used to personalize your recovery estimates</div>
+      </div>
+      <div class="toggle" id="privacyToggle" onclick="toggleSetting('privacy_share_analytics', this)"></div>
+    </div>
+    <div class="field" style="margin-top:14px;">
+      <label for="goalInput">Recovery goal</label>
+      <input type="text" id="goalInput" placeholder="e.g. Stay smoke-free for 90 days">
+    </div>
+    <button class="btn-primary-block" id="saveGoalBtn" onclick="saveGoal()">Save goal</button>
+  </div>
+
+  <div class="card danger-zone">
+    <h4>Delete account</h4>
+    <p>Permanently removes your account and all recovery data. This cannot be undone.</p>
+    <button class="btn-danger" onclick="handleDelete()">Delete my account</button>
+  </div>
+</div>
+
+<script>
+  let settingsState = {};
+
+  async function toggleSetting(key, el){
+    const newVal = !settingsState[key];
+    el.classList.toggle('on', newVal);
+    try {
+      await updateSettings({ [key]: newVal });
+      settingsState[key] = newVal;
+    } catch (err) {
+      el.classList.toggle('on', settingsState[key]);
+      alert(err.message || 'Could not update this setting.');
+    }
+  }
+
+  async function saveGoal(){
+    const goal = document.getElementById('goalInput').value.trim();
+    const btn = document.getElementById('saveGoalBtn');
+    btn.textContent = 'Saving...'; btn.disabled = true;
+    try {
+      await updateSettings({ recovery_goal: goal });
+    } catch (err) {
+      alert(err.message || 'Could not save your goal.');
+    } finally {
+      btn.textContent = 'Save goal'; btn.disabled = false;
+    }
+  }
+
+  async function handleDelete(){
+    if (!confirm('This permanently deletes your account and all recovery data. Continue?')) return;
+    try {
+      await deleteAccount();
+      window.location.href = 'index.html';
+    } catch (err) {
+      alert(err.message || 'Could not delete your account right now.');
+    }
+  }
+
+  (async function init(){
+    renderAppNav('profile');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    try {
+      const s = await getSettings();
+      document.getElementById('profileName').textContent = s.full_name;
+      document.getElementById('profileEmail').textContent = s.email;
+      document.getElementById('quitReason').textContent = s.quit_reason || 'Not set';
+      document.getElementById('goalInput').value = s.recovery_goal || '';
+      settingsState = {
+        notifications_enabled: s.notifications_enabled,
+        privacy_share_analytics: s.privacy_share_analytics,
+      };
+      document.getElementById('notifToggle').classList.toggle('on', s.notifications_enabled);
+      document.getElementById('privacyToggle').classList.toggle('on', s.privacy_share_analytics);
+    } catch (err) {
+      document.getElementById('profileName').textContent = 'Could not load settings';
+    }
+  })();
+</script>
+
+</body>
+</html>

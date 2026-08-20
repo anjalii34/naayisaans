@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journal — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell narrow">
+  <div class="page-head">
+    <div class="eyebrow">Low-pressure reflection</div>
+    <h1>Journal</h1>
+    <p>How the day felt, what helped, what was difficult — write as little or as much as you like.</p>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label for="journalMood">Mood (optional)</label>
+      <div class="chip-row" id="moodChips">
+        <div class="chip" data-value="good">Good</div>
+        <div class="chip" data-value="okay">Okay</div>
+        <div class="chip" data-value="tough">Tough</div>
+        <div class="chip" data-value="proud">Proud</div>
+        <div class="chip" data-value="tired">Tired</div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="journalText">Entry</label>
+      <textarea id="journalText" placeholder="What happened before a craving? Which task did you try? What do you want to remember?" style="min-height:140px;"></textarea>
+    </div>
+    <button class="btn-primary-block" id="submitBtn" onclick="submitEntry()">Save entry</button>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>Past entries</h3></div>
+    <div class="entry-list" id="journalList"><!-- injected --></div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('moodChips').addEventListener('click', e => {
+    if (e.target.classList.contains('chip')) {
+      document.querySelectorAll('#moodChips .chip').forEach(c => c.classList.remove('selected'));
+      e.target.classList.add('selected');
+    }
+  });
+
+  async function submitEntry(){
+    const content = document.getElementById('journalText').value.trim();
+    if (!content){ alert('Write something first.'); return; }
+    const moodEl = document.querySelector('#moodChips .chip.selected');
+    const mood = moodEl ? moodEl.dataset.value : null;
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = 'Saving...'; btn.disabled = true;
+    try {
+      await addJournalEntry({ content, mood });
+      document.getElementById('journalText').value = '';
+      document.querySelectorAll('#moodChips .chip.selected').forEach(c => c.classList.remove('selected'));
+      loadEntries();
+    } catch (err) {
+      alert(err.message || 'Could not save this entry.');
+    } finally {
+      btn.textContent = 'Save entry'; btn.disabled = false;
+    }
+  }
+
+  async function loadEntries(){
+    try {
+      const { entries } = await getJournalEntries();
+      const el = document.getElementById('journalList');
+      if (!entries.length){ el.innerHTML = '<p class="empty-note">No entries yet.</p>'; return; }
+      el.innerHTML = entries.map(e => `
+        <div class="entry-row">
+          <div class="entry-row-head">
+            ${e.mood ? `<span class="pill pill-teal">${e.mood}</span>` : '<span></span>'}
+            <span class="entry-time">${new Date(e.timestamp).toLocaleString()}</span>
+          </div>
+          <p>${e.content}</p>
+        </div>
+      `).join('');
+    } catch (err) { /* ok if empty */ }
+  }
+
+  (async function init(){
+    renderAppNav('journal');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+    loadEntries();
+  })();
+</script>
+
+</body>
+</html>

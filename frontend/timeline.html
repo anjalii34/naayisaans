@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recovery Timeline — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/time.css">
+<script src="assets/js/api.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="logo">
+    <span class="logo-mark"></span>
+    NayiSaans
+  </a>
+  <a href="dashboard.html" class="back-link">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Back to dashboard
+  </a>
+</div>
+
+<div class="tl-shell">
+
+  <div class="tl-header">
+    <div class="tl-eyebrow">Your journey</div>
+    <h1>Recovery Timeline</h1>
+    <p class="sub">Every check-in, every milestone — the full picture of how far you've come.</p>
+  </div>
+
+  <div class="tl-filters" id="tlFilters">
+    <button class="tl-chip active" data-filter="all">All</button>
+    <button class="tl-chip" data-filter="checkin">Check-ins</button>
+    <button class="tl-chip" data-filter="physiology">Physiology</button>
+    <button class="tl-chip" data-filter="milestone">Milestones</button>
+  </div>
+
+  <div class="tl-track" id="tlTrack"><!-- injected by JS --></div>
+
+  <div class="tl-empty" id="tlEmpty">
+    <div class="tl-empty-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+    </div>
+    <h3>No entries yet for this filter</h3>
+    <p>Try a different filter, or check back after your next check-in.</p>
+  </div>
+
+</div>
+
+<script>
+  const NODE_ICONS = {
+    milestone: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>`,
+    checkin: `<path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/>`,
+    physiology: `<path stroke-linecap="round" stroke-linejoin="round" d="M21 12.35c0 3.5-4.5 6.9-8.4 9.15a1.2 1.2 0 0 1-1.2 0C7.5 19.25 3 15.85 3 12.35 3 9 5.7 6.5 8.7 6.5c1.6 0 3 .75 3.3 1.9.3-1.15 1.7-1.9 3.3-1.9 3 0 5.7 2.5 5.7 5.85Z"/>`,
+  };
+  const TAG_LABELS = { milestone: 'Milestone', checkin: 'Check-in', physiology: 'Physiology' };
+
+  function renderTimeline(entries){
+    const track = document.getElementById('tlTrack');
+    track.innerHTML = '';
+
+    if (!entries || entries.length === 0){
+      document.getElementById('tlEmpty').style.display = 'block';
+      return;
+    }
+
+    entries.forEach((e, i) => {
+      const isLast = i === entries.length - 1;
+      const day = document.createElement('div');
+      day.className = 'tl-day';
+      day.dataset.type = e.type;
+      day.innerHTML = `
+        <div class="tl-day-head">
+          <span class="tl-date">${e.day_label}</span>
+          <span class="tl-date-full">${e.date_full}${isLast ? ' · Today' : ''}</span>
+        </div>
+        <div class="tl-node-wrap">
+          <div class="tl-node tl-node-${e.type} ${isLast ? 'tl-node-today' : ''}">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">${NODE_ICONS[e.type] || NODE_ICONS.checkin}</svg>
+          </div>
+          ${isLast ? '' : '<div class="tl-line"></div>'}
+        </div>
+        <div class="tl-card ${isLast ? 'tl-card-today' : ''}">
+          <span class="tl-tag tl-tag-${e.type}">${isLast ? 'Today' : (TAG_LABELS[e.type] || 'Update')}</span>
+          <h3>${e.title}</h3>
+          <p>${e.desc || ''}</p>
+        </div>
+      `;
+      track.appendChild(day);
+    });
+
+    attachFilters();
+  }
+
+  function attachFilters(){
+    const filters = document.querySelectorAll('.tl-chip');
+    const days = document.querySelectorAll('.tl-day');
+    const emptyState = document.getElementById('tlEmpty');
+
+    filters.forEach(chip => {
+      chip.onclick = () => {
+        filters.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const filter = chip.dataset.filter;
+        let visibleCount = 0;
+        days.forEach(day => {
+          const show = filter === 'all' || day.dataset.type === filter;
+          day.style.display = show ? 'grid' : 'none';
+          if (show) visibleCount++;
+        });
+        emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+      };
+    });
+  }
+
+  (async function init(){
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) {
+      window.location.href = 'login.html';
+      return;
+    }
+    try {
+      const { entries } = await getTimeline();
+      renderTimeline(entries);
+    } catch (err) {
+      document.getElementById('tlTrack').innerHTML = '';
+      document.getElementById('tlEmpty').style.display = 'block';
+    }
+  })();
+</script>
+
+</body>
+</html>

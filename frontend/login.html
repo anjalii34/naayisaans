@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/api.js" ></script>
+</head>
+<body class="mode-login">
+
+<div class="topbar">
+  <a href="index.html" class="logo">
+    <span class="logo-mark"></span>
+    NayiSaans
+  </a>
+  <a href="index.html" class="back-link">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Back to home
+  </a>
+</div>
+
+<div class="auth-shell">
+
+  <div class="form-panel">
+    <div class="form-wrap">
+      <div class="form-eyebrow">Welcome back</div>
+      <h1 id="formTitle">Log in to your account</h1>
+      <p class="sub" id="formSub">Continue your recovery journey right where you left off.</p>
+
+      <div class="tabs">
+        <button class="tab active" id="tabLogin" onclick="setMode('login')">Log in</button>
+        <button class="tab" id="tabSignup" onclick="setMode('signup')">Sign up</button>
+      </div>
+
+      <form onsubmit="return false;">
+
+        <div class="field signup-only">
+          <label for="fullName">Full name</label>
+          <input type="text" id="fullName" placeholder="Enter your name">
+        </div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" placeholder="you@example.com">
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password">
+        </div>
+
+        <div class="field signup-only">
+          <label for="confirmPassword">Confirm password</label>
+          <input type="password" id="confirmPassword" placeholder="Re-enter your password">
+        </div>
+
+        <div class="form-meta login-only">
+          <label class="checkbox-row">
+            <input type="checkbox">
+            Remember me
+          </label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">Log in</button>
+      </form>
+      <div class="form-error" id="formError"></div>
+      <div class="divider">or continue with</div>
+
+      <div class="alt-actions">
+        <button class="btn-alt">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.46a5.53 5.53 0 0 1-2.4 3.63v3h3.87c2.27-2.09 3.59-5.17 3.59-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.92l-3.87-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.95H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38l4-3.1z"/><path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.27 6.62l4 3.1C6.22 6.88 8.87 4.77 12 4.77z"/></svg>
+          Continue with Google
+        </button>
+        <button class="btn-alt">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-1.5 18h.008v.008H12V19.5Z"/></svg>
+          Continue with Phone OTP
+        </button>
+      </div>
+
+      <div class="privacy-note">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+        Your data stays private, always.
+      </div>
+
+      <div class="switch-line" id="switchLine">
+        New to NayiSaans? <a href="#" onclick="setMode('signup');return false;">Create an account</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="visual-panel">
+    <div class="visual-panel-bg"></div>
+    <div class="visual-panel-overlay"></div>
+    <div class="vp-content">
+      <div class="vp-rings">
+        <div class="vp-ring vpr3"></div>
+        <div class="vp-ring vpr2"></div>
+        <div class="vp-ring vpr1"></div>
+        <div class="vp-core">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        </div>
+      </div>
+      <div class="hindi">हर दिन एक नयी शुरुआत</div>
+      <h2>Your recovery, modelled daily</h2>
+      <p>Track cravings, exposure, and progress — with an AI that explains every insight, in plain language.</p>
+      <div class="vp-love-line">
+        <p>"Jinhe aap sabse zyada pyaar karte hain, unke liye ek NayiSaans chuniye — kyunki ghar par koi aapka intezaar kar raha hai".</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function setMode(mode){
+    const body = document.body;
+    const tabLogin = document.getElementById('tabLogin');
+    const tabSignup = document.getElementById('tabSignup');
+    const formTitle = document.getElementById('formTitle');
+    const formSub = document.getElementById('formSub');
+    const submitBtn = document.getElementById('submitBtn');
+    const switchLine = document.getElementById('switchLine');
+
+    clearFormError();
+
+    if(mode === 'signup'){
+      body.classList.add('mode-signup');
+      tabSignup.classList.add('active');
+      tabLogin.classList.remove('active');
+      formTitle.textContent = 'Create your account';
+      formSub.textContent = 'Start your smoke-free journey with a plan built around you.';
+      submitBtn.textContent = 'Create account';
+      switchLine.innerHTML = 'Already have an account? <a href="#" onclick="setMode(\'login\');return false;">Log in</a>';
+    } else {
+      body.classList.remove('mode-signup');
+      tabLogin.classList.add('active');
+      tabSignup.classList.remove('active');
+      formTitle.textContent = 'Log in to your account';
+      formSub.textContent = 'Continue your recovery journey right where you left off.';
+      submitBtn.textContent = 'Log in';
+      switchLine.innerHTML = 'New to NayiSaans? <a href="#" onclick="setMode(\'signup\');return false;">Create an account</a>';
+    }
+  }
+
+  function showFormError(message){
+    const el = document.getElementById('formError');
+    el.textContent = message;
+    el.classList.add('visible');
+  }
+  function clearFormError(){
+    const el = document.getElementById('formError');
+    el.textContent = '';
+    el.classList.remove('visible');
+  }
+
+  document.querySelector('form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    clearFormError();
+
+    const isSignup = document.body.classList.contains('mode-signup');
+    const submitBtn = document.getElementById('submitBtn');
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if(!email || !password){
+      showFormError('Please fill in email and password.');
+      return;
+    }
+
+    if(isSignup){
+      const fullName = document.getElementById('fullName').value.trim();
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      if(!fullName){
+        showFormError('Please enter your name.');
+        return;
+      }
+      if(password !== confirmPassword){
+        showFormError('Passwords do not match.');
+        return;
+      }
+    }
+
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = isSignup ? 'Creating account...' : 'Logging in...';
+    submitBtn.disabled = true;
+
+    try{
+      if(isSignup){
+        await signup(document.getElementById('fullName').value.trim(), email, password);
+      } else {
+        await login(email, password);
+      }
+      window.location.href = 'onboard.html';
+    } catch(err){
+      showFormError(err.message || 'Something went wrong. Please try again.');
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+
+</body>
+</html>

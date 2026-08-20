@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wellness Lab — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell">
+  <div class="page-head">
+    <div class="eyebrow">Exploratory, low-stakes</div>
+    <h1>Wellness Lab</h1>
+    <p>Small lifestyle experiments — sleep, hydration, movement, breathing, routine — try one and see how it changes your recovery context.</p>
+  </div>
+
+  <div class="card-grid cols-3" id="experimentGrid"><!-- injected --></div>
+</div>
+
+<script>
+  async function tryExperiment(id, btn){
+    btn.textContent = 'Logging...'; btn.disabled = true;
+    try {
+      await completeTask(id, null, null);
+      btn.textContent = 'Logged ✓';
+    } catch (err) {
+      btn.textContent = 'Try it';
+      btn.disabled = false;
+      alert(err.message || 'Could not log this experiment.');
+    }
+  }
+
+  (async function init(){
+    renderAppNav('wellness');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    try {
+      const experiments = await getWellnessExperiments();
+      const grid = document.getElementById('experimentGrid');
+      if (!experiments.length){ grid.innerHTML = '<p class="empty-note">No experiments available right now.</p>'; return; }
+      grid.innerHTML = experiments.map(e => `
+        <div class="experiment-card">
+          <h4>${e.title}</h4>
+          <p>${e.description}</p>
+          <div class="experiment-meta">
+            <span class="pill">${e.duration_minutes} min</span>
+            <span class="pill pill-teal">${e.effort} effort</span>
+          </div>
+          <button class="btn-try" onclick="tryExperiment(${e.id}, this)">Try it</button>
+        </div>
+      `).join('');
+    } catch (err) {
+      document.getElementById('experimentGrid').innerHTML = '<p class="empty-note">Could not load experiments right now.</p>';
+    }
+  })();
+</script>
+
+</body>
+</html>

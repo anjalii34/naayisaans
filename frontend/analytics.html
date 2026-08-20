@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell">
+  <div class="page-head">
+    <div class="eyebrow">Longer-term visibility</div>
+    <h1>Analytics</h1>
+    <p>Trends across your recovery, not just today's snapshot.</p>
+  </div>
+
+  <div class="card">
+    <div class="metric-row" id="metricRow"><!-- injected --></div>
+  </div>
+
+  <div class="card-grid cols-2">
+    <div class="card">
+      <div class="panel-head"><h3>Craving intensity — last 14 days</h3></div>
+      <div class="trend-chart" id="cravingTrend"><!-- injected --></div>
+    </div>
+    <div class="card">
+      <div class="panel-head"><h3>Stress — last 14 days</h3></div>
+      <div class="trend-chart" id="stressTrend"><!-- injected --></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>Check-ins</h3></div>
+    <div class="metric-row" style="grid-template-columns:1fr 1fr;">
+      <div class="metric-box"><div class="m-value" id="smokedCount">--</div><div class="m-label">Smoked</div></div>
+      <div class="metric-box"><div class="m-value" id="resistedCount">--</div><div class="m-label">Resisted</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function renderTrend(elId, data, key){
+    const el = document.getElementById(elId);
+    if (!data.length){ el.innerHTML = '<p class="empty-note">Not enough data yet.</p>'; return; }
+    const max = Math.max(...data.map(d => d[key]), 10);
+    el.innerHTML = data.map(d => `
+      <div class="bar-wrap">
+        <div class="bar" style="height:${Math.max((d[key]/max)*100, 6)}%;"></div>
+        <div class="bar-label">${d.day.split(' ')[1] || d.day}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderMetrics(data){
+    document.getElementById('metricRow').innerHTML = `
+      <div class="metric-box"><div class="m-value">${data.current_streak}</div><div class="m-label">Day streak</div></div>
+      <div class="metric-box"><div class="m-value">${data.current_risk_pct}%</div><div class="m-label">Current risk</div></div>
+      <div class="metric-box"><div class="m-value">${data.tasks_completed}</div><div class="m-label">Tasks (14d)</div></div>
+      <div class="metric-box"><div class="m-value">${data.task_avg_craving_relief ?? '--'}</div><div class="m-label">Avg. relief</div></div>
+    `;
+    document.getElementById('smokedCount').textContent = data.checkins_smoked;
+    document.getElementById('resistedCount').textContent = data.checkins_resisted;
+  }
+
+  (async function init(){
+    renderAppNav('analytics');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    try {
+      const data = await getAnalytics();
+      renderMetrics(data);
+      renderTrend('cravingTrend', data.craving_trend, 'avg_intensity');
+      renderTrend('stressTrend', data.stress_trend, 'avg_stress');
+    } catch (err) {
+      document.getElementById('metricRow').innerHTML = '<p class="empty-note">Could not load analytics right now.</p>';
+    }
+  })();
+</script>
+
+</body>
+</html>

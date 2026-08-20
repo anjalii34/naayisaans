@@ -1,0 +1,163 @@
+/* ============================================================
+   app.css — shared nav strip + components for pages added on top
+   of the original NayiSaans build (Digital Twin, Tasks, Cravings,
+   Journal, Triggers, Analytics, Wellness Lab, Coach, Journey,
+   Resources, Profile). Uses the same --tokens defined in style.css.
+   ============================================================ */
+
+/* ---------- Secondary nav strip (sits under .app-bar) ---------- */
+.app-nav{
+  position:sticky;top:65px;z-index:90;
+  background:var(--white);border-bottom:1px solid var(--line);
+  overflow-x:auto; -ms-overflow-style:none; scrollbar-width:none;
+}
+.app-nav::-webkit-scrollbar{ display:none; }
+.app-nav-inner{
+  display:flex;gap:6px;padding:10px 24px;white-space:nowrap;
+}
+.app-nav-item{
+  font-size:13px;font-weight:600;color:var(--muted);
+  padding:8px 14px;border-radius:999px;transition:all .15s;flex-shrink:0;
+}
+.app-nav-item:hover{ background:var(--blue-softer);color:var(--blue-deep); }
+.app-nav-item.active{ background:var(--blue-primary);color:var(--white); }
+
+/* ---------- Generic page shell / header (reused across new pages) ---------- */
+.page-shell{ max-width:1080px;margin:0 auto;padding:32px 24px 80px; }
+.page-shell.narrow{ max-width:760px; }
+.page-head{ margin-bottom:28px; }
+.page-head .eyebrow{ font-size:12.5px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px; }
+.page-head h1{ font-size:25px;font-weight:700;color:var(--blue-deep);margin-bottom:6px; }
+.page-head p{ font-size:14.5px;color:var(--muted); }
+
+/* ---------- Generic card / panel (extends .panel) ---------- */
+.card{
+  background:var(--white);border:1px solid var(--line);border-radius:18px;padding:24px;
+}
+.card + .card{ margin-top:16px; }
+.card-grid{ display:grid;gap:16px; }
+.card-grid.cols-2{ grid-template-columns:1fr 1fr; }
+.card-grid.cols-3{ grid-template-columns:repeat(3,1fr); }
+@media (max-width:800px){ .card-grid.cols-2, .card-grid.cols-3{ grid-template-columns:1fr; } }
+
+/* pill badges used everywhere: effort/impact/category labels */
+.pill{
+  display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:999px;background:var(--blue-soft);color:var(--blue-primary);
+}
+.pill-teal{ background:var(--teal-soft);color:var(--teal); }
+.pill-amber{ background:#FBF0E3;color:#B87A2E; }
+.pill-coral{ background:#FBEAE9;color:#C25450; }
+
+/* form field basics reused by Cravings / Journal / Triggers */
+.field{ margin-bottom:20px; }
+.field label{ display:block;font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:8px; }
+.field select, .field input[type="text"], .field textarea{
+  width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;
+  font-size:14px;color:var(--ink);background:var(--white);font-family:inherit;
+}
+.field textarea{ resize:vertical;min-height:80px; }
+.field select:focus, .field input:focus, .field textarea:focus{
+  border-color:var(--blue-primary);outline:none;box-shadow:0 0 0 4px rgba(22,104,166,0.12);
+}
+.chip-row{ display:flex;flex-wrap:wrap;gap:10px; }
+
+.btn-primary-block{
+  width:100%;padding:13px 0;border-radius:10px;background:var(--blue-primary);color:var(--white);
+  font-size:14.5px;font-weight:700;border:none;cursor:pointer;transition:all .2s;
+  box-shadow:0 8px 20px rgba(22,104,166,0.24);
+}
+.btn-primary-block:hover{ background:var(--blue-deep);transform:translateY(-1px); }
+.btn-primary-block:disabled{ opacity:.6;cursor:default;transform:none; }
+
+.empty-note{ font-size:13.5px;color:var(--muted);padding:8px 0; }
+
+/* ---------- entry-list rows (Cravings / Journal history) ---------- */
+.entry-list{ display:flex;flex-direction:column;gap:10px; }
+.entry-row{
+  background:var(--white);border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+}
+.entry-row-head{ display:flex;justify-content:space-between;align-items:center;margin-bottom:6px; }
+.entry-row-head .entry-time{ font-size:12px;color:var(--muted);font-weight:600; }
+.entry-row p{ font-size:13.5px;color:var(--ink);line-height:1.55; }
+.entry-tags{ display:flex;gap:6px;flex-wrap:wrap;margin-top:8px; }
+
+/* ---------- simple bar / line trend (Analytics) ---------- */
+.trend-chart{ display:flex;align-items:flex-end;gap:6px;height:120px;padding:8px 2px 0;overflow-x:auto; }
+.trend-chart .bar-wrap{ flex:0 0 28px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px; }
+.trend-chart .bar{ width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg, var(--blue-primary), var(--teal)); }
+.trend-chart .bar-label{ font-size:10px;color:var(--muted);font-weight:600;writing-mode:horizontal-tb; }
+.metric-row{ display:grid;grid-template-columns:repeat(4,1fr);gap:14px; }
+@media (max-width:800px){ .metric-row{ grid-template-columns:1fr 1fr; } }
+.metric-box{ text-align:center;padding:16px 10px;background:var(--blue-softer);border-radius:14px; }
+.metric-box .m-value{ font-family:'Plus Jakarta Sans';font-size:22px;font-weight:800;color:var(--blue-deep); }
+.metric-box .m-label{ font-size:11.5px;color:var(--muted);font-weight:600;margin-top:4px; }
+
+/* ---------- Digital Twin body map ---------- */
+.twin-layout{ display:grid;grid-template-columns:340px 1fr;gap:28px; }
+@media (max-width:800px){ .twin-layout{ grid-template-columns:1fr; } }
+.twin-figure-wrap{ display:flex;flex-direction:column;align-items:center;gap:14px; }
+.twin-state-label{ font-size:14px;font-weight:700;color:var(--blue-deep);text-align:center; }
+.twin-region{ cursor:pointer;transition:opacity .2s; }
+.twin-region:hover{ opacity:0.75; }
+.signal-card{ margin-bottom:14px; }
+.signal-card-head{ display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px; }
+.signal-card-head h4{ font-size:13.5px;font-weight:700;color:var(--ink); }
+.signal-card-head span{ font-size:12.5px;font-weight:700;color:var(--muted); }
+.signal-bar-track{ height:8px;border-radius:999px;background:var(--blue-softer);overflow:hidden; }
+.signal-bar-fill{ height:100%;border-radius:999px;transition:width .4s; }
+
+/* ---------- chat (Recovery Coach) ---------- */
+.chat-shell{ display:flex;flex-direction:column;height:520px;background:var(--white);border:1px solid var(--line);border-radius:18px;overflow:hidden; }
+.chat-messages{ flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:14px; }
+.chat-bubble{ max-width:78%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.55; }
+.chat-bubble.user{ align-self:flex-end;background:var(--blue-primary);color:var(--white);border-bottom-right-radius:4px; }
+.chat-bubble.coach{ align-self:flex-start;background:var(--blue-softer);color:var(--ink);border-bottom-left-radius:4px; }
+.chat-suggestions{ display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 14px; }
+.chat-suggestion{ font-size:12.5px;font-weight:600;color:var(--blue-primary);background:var(--blue-soft);padding:7px 13px;border-radius:999px;cursor:pointer; }
+.chat-input-row{ display:flex;gap:10px;padding:16px 18px;border-top:1px solid var(--line); }
+.chat-input-row input{ flex:1;padding:11px 15px;border:1.5px solid var(--line);border-radius:999px;font-size:14px;font-family:inherit; }
+.chat-input-row input:focus{ outline:none;border-color:var(--blue-primary); }
+.chat-input-row button{ padding:0 20px;border-radius:999px;background:var(--blue-primary);color:var(--white);font-weight:700;font-size:13.5px;border:none;cursor:pointer; }
+.chat-input-row button:disabled{ opacity:.6; }
+
+/* ---------- resources ---------- */
+.resource-cat{ margin-bottom:22px; }
+.resource-cat h3{ font-size:15px;font-weight:700;color:var(--blue-deep);margin-bottom:12px; }
+.resource-item{ padding:14px 0;border-bottom:1px solid var(--line); }
+.resource-item:last-child{ border-bottom:none; }
+.resource-item h4{ font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px; }
+.resource-item p{ font-size:13px;color:var(--muted);line-height:1.5; }
+
+/* ---------- profile / settings ---------- */
+.settings-row{ display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line); }
+.settings-row:last-child{ border-bottom:none; }
+.settings-row-label{ font-size:14px;font-weight:600;color:var(--ink); }
+.settings-row-sub{ font-size:12.5px;color:var(--muted);margin-top:2px; }
+.toggle{ position:relative;width:44px;height:24px;border-radius:999px;background:var(--line);cursor:pointer;transition:background .2s;flex-shrink:0; }
+.toggle.on{ background:var(--teal); }
+.toggle::after{ content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--white);transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.toggle.on::after{ left:23px; }
+.danger-zone{ border:1.5px solid #F3D3D1;background:#FDF6F5;border-radius:16px;padding:20px; }
+.danger-zone h4{ color:#C25450;font-size:14px;font-weight:700;margin-bottom:6px; }
+.danger-zone p{ font-size:13px;color:var(--muted);margin-bottom:14px; }
+.btn-danger{ padding:10px 20px;border-radius:10px;background:#C25450;color:var(--white);font-weight:700;font-size:13.5px;border:none;cursor:pointer; }
+
+/* ---------- Wellness Lab experiment cards ---------- */
+.experiment-card{ border:1.5px solid var(--line);border-radius:16px;padding:18px;transition:all .2s; }
+.experiment-card:hover{ border-color:var(--teal);box-shadow:0 10px 24px rgba(15,61,92,.06); }
+.experiment-card h4{ font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:6px; }
+.experiment-card p{ font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5; }
+.experiment-meta{ display:flex;gap:8px;margin-bottom:12px; }
+.btn-try{ font-size:12.5px;font-weight:700;color:var(--teal);background:var(--teal-soft);padding:8px 14px;border-radius:999px;border:none;cursor:pointer; }
+.btn-try:disabled{ opacity:.6;cursor:default; }
+
+/* ---------- Journey / milestones ---------- */
+.milestone-row{ display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line); }
+.milestone-row:last-child{ border-bottom:none; }
+.milestone-dot{ width:10px;height:10px;border-radius:50%;background:var(--teal);margin-top:6px;flex-shrink:0; }
+.milestone-row h4{ font-size:13.5px;font-weight:700;color:var(--ink); }
+.milestone-row p{ font-size:12.5px;color:var(--muted);margin-top:2px; }
+.streak-badges{ display:flex;gap:10px;flex-wrap:wrap; }
+.streak-badge{ padding:8px 16px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--blue-softer);color:var(--muted); }
+.streak-badge.reached{ background:var(--teal-soft);color:var(--teal); }

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physiology Check — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/api.js"></script>
+<style>
+  /* ---------- page-specific: physiology ---------- */
+  .phy-shell{
+    max-width:640px;margin:0 auto;padding:40px 24px 80px;
+  }
+  .phy-eyebrow{
+    font-size:13px;font-weight:600;color:var(--teal);
+    text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;text-align:center;
+  }
+  .phy-shell h1{
+    font-size:28px;font-weight:700;color:var(--blue-deep);margin-bottom:8px;text-align:center;
+  }
+  .phy-shell .sub{
+    font-size:14.5px;color:var(--muted);margin-bottom:32px;text-align:center;
+  }
+
+  .cam-card{
+    background:var(--blue-deep);
+    border-radius:24px;
+    padding:28px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 24px 60px rgba(15,61,92,0.18);
+  }
+  .cam-frame{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    border-radius:16px;
+    background:#0a2537;
+    overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .cam-frame video{
+    width:100%;height:100%;object-fit:cover;
+    transform:scaleX(-1); /* mirror, feels natural */
+    display:none;
+  }
+  .cam-placeholder{
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    color:rgba(255,255,255,0.6);
+    padding:20px;text-align:center;
+  }
+  .cam-placeholder svg{width:52px;height:52px;color:rgba(255,255,255,0.35);}
+  .cam-placeholder p{font-size:13.5px;max-width:260px;}
+
+  .face-guide{
+    position:absolute;
+    top:50%;left:50%;
+    width:44%;height:60%;
+    border:2px dashed rgba(255,255,255,0.55);
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    display:none;
+    pointer-events:none;
+  }
+  .cam-frame.active .face-guide{ display:block; }
+  .cam-frame.active video{ display:block; }
+  .cam-frame.active .cam-placeholder{ display:none; }
+
+  .scan-line{
+    position:absolute;left:0;right:0;height:2px;
+    background:linear-gradient(90deg, transparent, var(--teal), transparent);
+    top:0;display:none;
+    animation:scanMove 2.2s linear infinite;
+  }
+  .cam-frame.scanning .scan-line{ display:block; }
+  @keyframes scanMove{
+    0%{top:6%;}
+    50%{top:92%;}
+    100%{top:6%;}
+  }
+
+  .cam-status{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    margin-top:18px;color:rgba(255,255,255,0.85);font-size:13.5px;font-weight:600;
+  }
+  .cam-status .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--muted);
+  }
+  .cam-status.ready .dot{ background:var(--teal); animation:pulseDotPhy 1.6s ease-in-out infinite; }
+  .cam-status.scanning .dot{ background:var(--sun); animation:pulseDotPhy 1s ease-in-out infinite; }
+  @keyframes pulseDotPhy{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .cam-actions{
+    display:flex;justify-content:center;gap:14px;margin-top:24px;
+  }
+  .btn-cam{
+    padding:13px 26px;border-radius:999px;font-weight:700;font-size:14.5px;
+    border:none;cursor:pointer;transition:all .2s;
+  }
+  .btn-cam-primary{
+    background:var(--white);color:var(--blue-deep);
+  }
+  .btn-cam-primary:hover{ background:var(--blue-softer); transform:translateY(-1px); }
+  .btn-cam-ghost{
+    background:rgba(255,255,255,0.1);color:var(--white);border:1px solid rgba(255,255,255,0.3);
+  }
+  .btn-cam-ghost:hover{ background:rgba(255,255,255,0.18); }
+
+  /* ---------- result card ---------- */
+  .result-card{
+    margin-top:24px;
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:28px;
+    display:none;
+  }
+  .result-card.show{ display:block; }
+  .result-top{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;
+  }
+  .result-label{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+  .signal-badge{
+    font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;
+  }
+  .signal-good{background:var(--teal-soft);color:var(--teal);}
+  .signal-fair{background:#FDF1E3;color:var(--sun);}
+  .signal-low{background:#FBEAEA;color:#C0392B;}
+
+  .bpm-display{
+    display:flex;align-items:baseline;gap:8px;margin-bottom:6px;
+  }
+  .bpm-display .num{
+    font-family:'Plus Jakarta Sans';font-size:48px;font-weight:800;color:var(--blue-deep);
+  }
+  .bpm-display .unit{font-size:16px;font-weight:600;color:var(--muted);}
+  .result-note{font-size:13.5px;color:var(--muted);}
+
+  .low-signal-box{
+    display:none;
+    background:#FBEAEA;
+    border-radius:14px;padding:18px 20px;
+    align-items:flex-start;gap:12px;
+  }
+  .low-signal-box.show{ display:flex; }
+  .low-signal-box svg{width:22px;height:22px;color:#C0392B;flex-shrink:0;margin-top:2px;}
+  .low-signal-box h4{font-size:14.5px;font-weight:700;color:#C0392B;margin-bottom:4px;}
+  .low-signal-box p{font-size:13.5px;color:#8a3a34;}
+
+  .phy-footer-note{
+    display:flex;align-items:center;gap:8px;justify-content:center;
+    margin-top:28px;font-size:12.5px;color:var(--muted);text-align:center;
+  }
+  .phy-footer-note svg{width:15px;height:15px;color:var(--teal);flex-shrink:0;}
+
+  .phy-bottom-actions{
+    display:flex;justify-content:center;gap:14px;margin-top:28px;flex-wrap:wrap;
+  }
+  .skip-link{
+    font-size:14px;font-weight:600;color:var(--muted);
+  }
+  .skip-link:hover{ color:var(--blue-deep); text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="logo">
+    <span class="logo-mark"></span>
+    NayiSaans
+  </a>
+  <a href="dashboard.html" class="back-link">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Back to dashboard
+  </a>
+</div>
+
+<div class="phy-shell">
+  <div class="phy-eyebrow">Optional check-in</div>
+  <h1>Physiology check</h1>
+  <p class="sub">A quick webcam scan to estimate your heart rate. Fully optional, fully on your device.</p>
+
+  <div class="cam-card">
+    <div class="cam-frame" id="camFrame">
+      <div class="cam-placeholder" id="camPlaceholder">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38 0-.753-.1-1.08-.288a2.25 2.25 0 0 1-.909-.909A2.31 2.31 0 0 1 3 5.11c0-1.24.986-2.253 2.208-2.29m1.62 3.355L15 12m-6.827-5.825L15 12m0 0 6.827 5.825M15 12l6.827-5.825M15 12l-6.173 6.825M15 12l6.173 6.825"/></svg>
+        <p>Camera preview will appear here. Grant access to begin your check.</p>
+      </div>
+      <video id="camVideo" autoplay playsinline muted></video>
+      <div class="face-guide"></div>
+      <div class="scan-line"></div>
+    </div>
+
+    <div class="cam-status" id="camStatus">
+      <span class="dot"></span>
+      <span id="camStatusText">Camera not started</span>
+    </div>
+
+    <div class="cam-actions">
+      <button class="btn-cam btn-cam-primary" id="startBtn" onclick="startCheck()">Allow camera & start</button>
+      <button class="btn-cam btn-cam-ghost" id="stopBtn" onclick="stopCheck()" style="display:none;">Stop</button>
+    </div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-top">
+      <span class="result-label">Estimated heart rate</span>
+      <span class="signal-badge" id="signalBadge">Good signal</span>
+    </div>
+    <div class="bpm-display">
+      <span class="num" id="bpmValue">--</span>
+      <span class="unit">BPM</span>
+    </div>
+    <p class="result-note" id="resultNote">This is a computational estimate from your webcam, not a clinical measurement.</p>
+
+    <div class="low-signal-box" id="lowSignalBox">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+      <div>
+        <h4>Signal quality too low</h4>
+        <p>We couldn't get a reliable reading — try better lighting, hold still, and make sure your face is fully in frame.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="phy-footer-note">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+    Processed on your device for this session only. Nothing is stored without your consent.
+  </div>
+
+  <div class="phy-bottom-actions">
+    <a href="dashboard.html" class="skip-link">Skip this step for now →</a>
+  </div>
+</div>
+
+<script>
+  if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
+    window.location.href = 'login.html';
+  }
+</script>
+<script src="assets/js/rppg.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Journey — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell">
+  <div class="page-head">
+    <div class="eyebrow">Not linear, still progress</div>
+    <h1>My Journey</h1>
+    <p>A slip is treated as an event to learn from — not a complete reset.</p>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>Streak milestones</h3></div>
+    <div class="streak-badges" id="streakBadges"><!-- injected --></div>
+  </div>
+
+  <div class="card-grid cols-3">
+    <div class="metric-box"><div class="m-value" id="tasksCompleted">--</div><div class="m-label">Tasks completed</div></div>
+    <div class="metric-box"><div class="m-value" id="cravingsLogged">--</div><div class="m-label">Cravings logged</div></div>
+    <div class="metric-box"><div class="m-value" id="checkinsLogged">--</div><div class="m-label">Check-ins logged</div></div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="panel-head"><h3>Recent milestones & progress</h3><a href="timeline.html" style="font-size:12.5px;color:var(--blue-primary);font-weight:600;">Full timeline →</a></div>
+    <div id="milestoneList"><!-- injected --></div>
+  </div>
+</div>
+
+<script>
+  function renderStreakBadges(reached, allTargets, next){
+    const el = document.getElementById('streakBadges');
+    el.innerHTML = allTargets.map(t => `
+      <span class="streak-badge ${reached.includes(t) ? 'reached' : ''}">${t} days${t === next ? ' (next)' : ''}</span>
+    `).join('');
+  }
+
+  function renderMilestones(items){
+    const el = document.getElementById('milestoneList');
+    if (!items.length){ el.innerHTML = '<p class="empty-note">No milestones yet — completed tasks and progress markers will show up here.</p>'; return; }
+    el.innerHTML = items.map(m => `
+      <div class="milestone-row">
+        <div class="milestone-dot"></div>
+        <div>
+          <h4>${m.title}</h4>
+          <p>${m.description || ''} · ${new Date(m.timestamp).toLocaleDateString()}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  (async function init(){
+    renderAppNav('journey');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    try {
+      const data = await getJourney();
+      renderStreakBadges(data.streak_milestones_reached, [7,14,30,60,90], data.next_streak_milestone);
+      document.getElementById('tasksCompleted').textContent = data.tasks_completed;
+      document.getElementById('cravingsLogged').textContent = data.cravings_logged;
+      document.getElementById('checkinsLogged').textContent = data.checkins_logged;
+      renderMilestones(data.recent_milestones);
+    } catch (err) {
+      document.getElementById('milestoneList').innerHTML = '<p class="empty-note">Could not load your journey right now.</p>';
+    }
+  })();
+</script>
+
+</body>
+</html>

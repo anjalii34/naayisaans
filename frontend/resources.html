@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resources — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell narrow">
+  <div class="page-head">
+    <div class="eyebrow">Complements, doesn't replace, professional care</div>
+    <h1>Resources</h1>
+    <p>Educational and supportive content to help you understand cravings, triggers, and stress.</p>
+  </div>
+
+  <div id="resourceList"><!-- injected --></div>
+</div>
+
+<script>
+  (async function init(){
+    renderAppNav('resources');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    try {
+      const { categories } = await getResources();
+      document.getElementById('resourceList').innerHTML = categories.map(cat => `
+        <div class="card resource-cat">
+          <h3>${cat.category}</h3>
+          ${cat.items.map(item => `
+            <div class="resource-item">
+              <h4>${item.title}</h4>
+              <p>${item.summary}</p>
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+    } catch (err) {
+      document.getElementById('resourceList').innerHTML = '<p class="empty-note">Could not load resources right now.</p>';
+    }
+  })();
+</script>
+
+</body>
+</html>

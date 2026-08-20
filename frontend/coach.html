@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recovery Coach — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell narrow">
+  <div class="page-head">
+    <div class="eyebrow">Calm, practical, non-judgmental</div>
+    <h1>Recovery Coach</h1>
+    <p>Grounded in your current twin state — not generic smoking-cessation advice.</p>
+  </div>
+
+  <div class="chat-shell">
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-suggestions">
+      <div class="chat-suggestion" onclick="ask('Why was my craving stronger tonight?')">Why was my craving stronger tonight?</div>
+      <div class="chat-suggestion" onclick="ask('What should I do when I feel stressed?')">Feeling stressed</div>
+      <div class="chat-suggestion" onclick="ask('I slipped — what do I do now?')">I slipped</div>
+      <div class="chat-suggestion" onclick="ask('Can you help me make a plan for tomorrow?')">Plan for tomorrow</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Ask the Recovery Coach..." onkeydown="if(event.key==='Enter') sendMessage();">
+      <button id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function appendBubble(role, text){
+    const wrap = document.getElementById('chatMessages');
+    const el = document.createElement('div');
+    el.className = `chat-bubble ${role === 'user' ? 'user' : 'coach'}`;
+    el.textContent = text;
+    wrap.appendChild(el);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  async function ask(text){
+    document.getElementById('chatInput').value = text;
+    sendMessage();
+  }
+
+  async function sendMessage(){
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    appendBubble('user', text);
+    input.value = '';
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+    try {
+      const { reply } = await sendCoachMessage(text);
+      appendBubble('coach', reply);
+    } catch (err) {
+      appendBubble('coach', "I couldn't reach your recovery data just now — try again in a moment.");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  (async function init(){
+    renderAppNav('coach');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    try {
+      const { messages } = await getCoachHistory();
+      if (messages.length){
+        messages.forEach(m => appendBubble(m.role === 'user' ? 'user' : 'coach', m.content));
+      } else {
+        appendBubble('coach', "Hi — I'm your Recovery Coach. Ask me anything about what's happening with your recovery right now.");
+      }
+    } catch (err) {
+      appendBubble('coach', "Hi — I'm your Recovery Coach. Ask me anything about what's happening with your recovery right now.");
+    }
+  })();
+</script>
+
+</body>
+</html>

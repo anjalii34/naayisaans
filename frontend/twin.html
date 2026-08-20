@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Twin — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo">
+      <span class="logo-mark"></span>
+      NayiSaans
+    </a>
+    <div class="app-bar-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="userInitial">U</div>
+        <span id="userName">Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell">
+
+  <div class="page-head">
+    <div class="eyebrow">Signature feature</div>
+    <h1>Your Digital Twin</h1>
+    <p>A living picture of your recovery signals — not medical anatomy, just a way to see what's contributing to how you feel right now.</p>
+  </div>
+
+  <div class="twin-layout">
+    <div class="twin-figure-wrap card">
+      <div class="twin-state-label" id="twinStateLabel">Loading your twin...</div>
+      <svg id="twinFigure" viewBox="0 0 220 420" width="220" height="420" xmlns="http://www.w3.org/2000/svg">
+        <!-- whole-body glow -->
+        <ellipse id="regionGlow" cx="110" cy="220" rx="95" ry="190" fill="url(#glowGrad)" opacity="0.35"/>
+        <defs>
+          <radialGradient id="glowGrad" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#2E9E8A"/>
+            <stop offset="100%" stop-color="#2E9E8A" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <!-- spinal pathway -->
+        <line id="regionSpine" x1="110" y1="95" x2="110" y2="330" stroke="#2E9E8A" stroke-width="4" stroke-linecap="round" opacity="0.55"/>
+        <!-- legs -->
+        <rect id="regionLegs" x="88" y="330" width="16" height="80" rx="8" fill="#2E9E8A" class="twin-region" data-region="legs"/>
+        <rect x="116" y="330" width="16" height="80" rx="8" fill="#2E9E8A" class="twin-region" data-region="legs" opacity="0.9"/>
+        <!-- torso / chest -->
+        <rect id="regionChest" x="75" y="150" width="70" height="90" rx="26" fill="#2E9E8A" class="twin-region" data-region="chest"/>
+        <!-- lungs/heart overlay -->
+        <circle id="regionHeart" cx="110" cy="185" r="16" fill="#F2A65A" class="twin-region" data-region="heart" opacity="0.85"/>
+        <!-- hands -->
+        <circle id="regionHandL" cx="58" cy="230" r="12" fill="#2E9E8A" class="twin-region" data-region="hands"/>
+        <circle id="regionHandR" cx="162" cy="230" r="12" fill="#2E9E8A" class="twin-region" data-region="hands"/>
+        <line x1="75" y1="165" x2="58" y2="225" stroke="#2E9E8A" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+        <line x1="145" y1="165" x2="162" y2="225" stroke="#2E9E8A" stroke-width="10" stroke-linecap="round" opacity="0.6"/>
+        <!-- head/brain -->
+        <circle id="regionHead" cx="110" cy="95" r="38" fill="#2E9E8A" class="twin-region" data-region="head"/>
+      </svg>
+      <div class="empty-note" style="text-align:center;">Tap a region for detail — colors update from your latest check-ins.</div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="panel-head"><h3>Signals</h3></div>
+        <div id="signalCards"><!-- injected --></div>
+      </div>
+
+      <div class="card">
+        <div class="panel-head"><h3>Recent state changes</h3></div>
+        <div class="entry-list" id="stateChanges"><!-- injected --></div>
+      </div>
+
+      <div class="card" style="font-size:12.5px;color:var(--muted);">
+        The Digital Twin is a visual storytelling layer built from your check-ins, logs, and completed tasks — it's not a diagnosis or a medical scan.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const REGION_DESCRIPTIONS = {
+    head:  { title: "Brain / head", desc: "Craving or urge intensity right now." },
+    chest: { title: "Chest", desc: "Stress and nervous-system load." },
+    heart: { title: "Lungs & heart", desc: "Internal recovery and stress-related change." },
+    hands: { title: "Hands", desc: "Environmental triggers and cue exposure." },
+    legs:  { title: "Legs & joints", desc: "Recent exposure and lower-body context." },
+  };
+
+  function colorForValue(pct){
+    // green (good/recovery) -> amber (moderate) -> coral (high stress/craving)
+    if (pct <= 33) return "#2E9E8A";
+    if (pct <= 66) return "#F2A65A";
+    return "#C25450";
+  }
+
+  function renderSignalCard(label, pct){
+    const color = colorForValue(pct);
+    return `
+      <div class="signal-card">
+        <div class="signal-card-head"><h4>${label}</h4><span>${pct}%</span></div>
+        <div class="signal-bar-track"><div class="signal-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+      </div>
+    `;
+  }
+
+  function renderTwin(data){
+    const risk = data.craving_risk_pct || 0;
+    const nicotine = data.nicotine_pct || 0;
+    // derive rough stress/trigger/exposure proxies from the why-factors + risk itself
+    const why = data.why || [];
+    const stress = (why.find(w => /stress/i.test(w.title)) ? Math.min(risk + 15, 100) : Math.max(risk - 10, 5));
+    const triggerExposure = Math.min(Math.round((why.length / 3) * 100), 100) || Math.round(risk * 0.7);
+    const legExposure = Math.max(100 - Math.round(data.streak_days ? Math.min(data.streak_days * 4, 90) : 20), 5);
+
+    document.getElementById("regionHead").setAttribute("fill", colorForValue(risk));
+    document.getElementById("regionChest").setAttribute("fill", colorForValue(stress));
+    document.getElementById("regionHeart").setAttribute("fill", colorForValue(nicotine));
+    document.getElementById("regionHandL").setAttribute("fill", colorForValue(triggerExposure));
+    document.getElementById("regionHandR").setAttribute("fill", colorForValue(triggerExposure));
+    document.getElementById("regionLegs").setAttribute("fill", colorForValue(legExposure));
+    document.getElementById("regionSpine").setAttribute("stroke", colorForValue(risk));
+    document.getElementById("regionGlow").setAttribute("fill", "url(#glowGrad)");
+
+    let state = "Ready for a small reset";
+    if (risk < 30) state = "Steady and holding your streak";
+    else if (risk < 60) state = "Some contributing signals to be aware of";
+    else state = "Elevated craving signals — a small action could help";
+    document.getElementById("twinStateLabel").textContent = state;
+
+    document.getElementById("signalCards").innerHTML =
+      renderSignalCard("Craving risk", Math.round(risk)) +
+      renderSignalCard("Stress", Math.round(stress)) +
+      renderSignalCard("Nicotine exposure", Math.round(nicotine)) +
+      renderSignalCard("Trigger exposure", Math.round(triggerExposure));
+
+    const changes = document.getElementById("stateChanges");
+    if (!why.length){
+      changes.innerHTML = '<p class="empty-note">No state changes yet — check in to start building your twin.</p>';
+    } else {
+      changes.innerHTML = why.map(w => `
+        <div class="entry-row">
+          <div class="entry-row-head"><span style="font-weight:700;font-size:13.5px;color:var(--ink);">${w.title}</span></div>
+          <p>${w.desc}</p>
+        </div>
+      `).join('');
+    }
+  }
+
+  document.querySelectorAll('.twin-region').forEach(el => {
+    el.addEventListener('click', () => {
+      const key = el.dataset.region;
+      const info = REGION_DESCRIPTIONS[key];
+      if (info) document.getElementById('twinStateLabel').textContent = `${info.title} — ${info.desc}`;
+    });
+  });
+
+  (async function init(){
+    renderAppNav('twin');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) {
+      window.location.href = 'login.html';
+      return;
+    }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    try {
+      const data = await getTwinState();
+      renderTwin(data);
+    } catch (err) {
+      document.getElementById('twinStateLabel').textContent = "Couldn't load your twin right now.";
+    }
+  })();
+</script>
+
+</body>
+</html>

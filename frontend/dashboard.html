@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Recovery Twin — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo">
+      <span class="logo-mark"></span>
+      NayiSaans
+    </a>
+    <div class="app-bar-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="userInitial">U</div>
+        <span id="userName">Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="dash-shell">
+
+  <div class="dash-greeting">
+    <h1 id="greetingText">Welcome back 👋</h1>
+    <p>Here's your recovery, modelled as of today.</p>
+  </div>
+
+  <div class="dash-stats">
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        Smoke-Free Streak
+      </div>
+      <div class="stat-value" id="streakValue">-- <span class="unit">days</span></div>
+      <div class="stat-sub" id="bestStreakSub">Best streak: -- days</div>
+    </div>
+
+    <div class="stat-card risk-card" id="riskCard">
+      <div class="stat-label">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+        Craving Risk
+      </div>
+      <div class="stat-value" id="riskValue">--<span class="unit">%</span></div>
+      <span class="confidence-pill" id="confidencePill">Loading...</span>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 8.25 8.25l3 3L18 4.5M18 4.5h-3M18 4.5v3M4.5 19.5h15"/></svg>
+        Estimated Nicotine
+      </div>
+      <div class="stat-value" id="nicotineValue">--<span class="unit">%</span></div>
+      <div class="stat-sub">of your usual baseline</div>
+    </div>
+  </div>
+
+  <div class="dash-main">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Estimated exposure — last 12 hours</h3>
+        <span class="panel-tag">Decay model, not a blood test</span>
+      </div>
+      <div class="exposure-chart" id="exposureChart"><!-- bars injected by JS --></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Why this risk score</h3>
+      </div>
+      <div class="why-list" id="whyList"><!-- injected by JS --></div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <a href="checkin.html" class="action-card">
+      <div class="action-icon ac-1">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      </div>
+      <h4>Daily Check-in</h4>
+      <p>Log a craving, cigarette, or how you're feeling — takes under a minute.</p>
+    </a>
+    <a href="physiology.html" class="action-card">
+      <div class="action-icon ac-2">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z"/></svg>
+      </div>
+      <h4>Physiology Check</h4>
+      <p>Optional webcam heart-rate estimate — your camera, your control.</p>
+    </a>
+    <a href="timeline.html" class="action-card">
+      <div class="action-icon ac-3">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>
+      </div>
+      <h4>View Timeline</h4>
+      <p>See your full recovery history, day by day.</p>
+    </a>
+  </div>
+
+</div>
+
+<script>
+  const NODE_ICONS = {
+    'Time of day': `<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>`,
+    'Usual smoking time': `<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>`,
+    'Reported stress': `<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>`,
+    'Days since last cigarette': `<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>`,
+    'Recent smoking pattern': `<path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5 8.25 8.25l3 3L18 4.5M18 4.5h-3M18 4.5v3M4.5 19.5h15"/>`,
+    'Heart-rate signal': `<path stroke-linecap="round" stroke-linejoin="round" d="M21 12.35c0 3.5-4.5 6.9-8.4 9.15a1.2 1.2 0 0 1-1.2 0C7.5 19.25 3 15.85 3 12.35 3 9 5.7 6.5 8.7 6.5c1.6 0 3 .75 3.3 1.9.3-1.15 1.7-1.9 3.3-1.9 3 0 5.7 2.5 5.7 5.85Z"/>`,
+  };
+  const FALLBACK_ICON = `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>`;
+
+  function renderWhyList(why){
+    const list = document.getElementById('whyList');
+    list.innerHTML = '';
+    if (!why || why.length === 0){
+      list.innerHTML = '<p style="font-size:13.5px;color:var(--muted);">No factors to show yet — check in to build your first estimate.</p>';
+      return;
+    }
+    why.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'why-item';
+      el.innerHTML = `
+        <div class="why-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">${NODE_ICONS[item.title] || FALLBACK_ICON}</svg>
+        </div>
+        <div class="why-text">
+          <h4>${item.title}</h4>
+          <p>${item.desc}</p>
+        </div>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  function renderDashboard(data) {
+    document.getElementById('userName').textContent = data.user.full_name;
+    document.getElementById('userInitial').textContent = data.user.full_name.charAt(0).toUpperCase();
+    document.getElementById('greetingText').textContent = `Welcome back, ${data.user.full_name.split(' ')[0]} 👋`;
+
+    document.getElementById('streakValue').innerHTML = `${data.streak_days} <span class="unit">days</span>`;
+    document.getElementById('bestStreakSub').textContent = `Best streak: ${data.best_streak} days`;
+
+    document.getElementById('riskValue').innerHTML = `${data.craving_risk_pct}<span class="unit">%</span>`;
+    const riskCard = document.getElementById('riskCard');
+    riskCard.classList.remove('risk-low', 'risk-high');
+    if (data.risk_level === 'low') riskCard.classList.add('risk-low');
+    if (data.risk_level === 'high') riskCard.classList.add('risk-high');
+
+    const confMap = { low: 'Low confidence', moderate: 'Moderate confidence', high: 'High confidence' };
+    document.getElementById('confidencePill').textContent = confMap[data.confidence] || 'Moderate confidence';
+
+    document.getElementById('nicotineValue').innerHTML = `${data.nicotine_pct}<span class="unit">%</span>`;
+
+    const chart = document.getElementById('exposureChart');
+    chart.innerHTML = '';
+    (data.exposure_series || []).forEach(point => {
+      const wrap = document.createElement('div');
+      wrap.className = 'bar-wrap';
+      wrap.innerHTML = `
+        <div class="bar" style="height:${point.value}%"></div>
+        <div class="bar-time">${point.time}</div>
+      `;
+      chart.appendChild(wrap);
+    });
+
+    renderWhyList(data.why);
+  }
+
+  (async function init(){
+    renderAppNav('dashboard');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) {
+      window.location.href = 'login.html';
+      return;
+    }
+    try {
+      const data = await getDashboard();
+      renderDashboard(data);
+    } catch (err) {
+      document.getElementById('greetingText').textContent = "Couldn't load your dashboard";
+      console.error(err);
+    }
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+sqlalchemy>=2.0
+python-jose[cryptography]
+bcrypt
+scikit-learn
+numpy
+python-multipart
+email-validator
+pydantic
+
+# Optional — only needed for production / extra features. Install separately
+# if your machine has build tools available:
+#   psycopg2-binary   (Postgres support — SQLite is used by default)
+#   shap              (exact SHAP explanations — app falls back gracefully
+#                       to model-coefficient importance without it)

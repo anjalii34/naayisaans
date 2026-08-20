@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recovery Tasks — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell">
+  <div class="page-head">
+    <div class="eyebrow">Small actions, not big plans</div>
+    <h1>Recovery Tasks</h1>
+    <p>Practical actions you can finish in a few minutes — sorted for what's happening with you right now.</p>
+  </div>
+
+  <div class="card-grid cols-2" id="taskGrid"><!-- injected --></div>
+
+  <div class="card" style="margin-top:24px;">
+    <div class="panel-head"><h3>Recently completed</h3></div>
+    <div class="entry-list" id="taskHistory"><!-- injected --></div>
+  </div>
+</div>
+
+<!-- before/after craving modal -->
+<div id="outcomeModal" style="display:none;position:fixed;inset:0;background:rgba(15,37,48,0.5);z-index:200;align-items:center;justify-content:center;">
+  <div class="card" style="max-width:420px;width:90%;">
+    <div class="panel-head"><h3 id="outcomeTaskTitle">Task</h3></div>
+    <div class="field">
+      <label>Craving before (1–10)</label>
+      <input type="range" min="1" max="10" value="5" id="beforeSlider" oninput="document.getElementById('beforeVal').textContent=this.value">
+      <div style="text-align:center;font-weight:700;color:var(--blue-deep);" id="beforeVal">5</div>
+    </div>
+    <div class="field">
+      <label>Craving after (1–10)</label>
+      <input type="range" min="1" max="10" value="3" id="afterSlider" oninput="document.getElementById('afterVal').textContent=this.value">
+      <div style="text-align:center;font-weight:700;color:var(--blue-deep);" id="afterVal">3</div>
+    </div>
+    <button class="btn-primary-block" id="outcomeSubmitBtn" onclick="submitOutcome()">Save outcome</button>
+    <button class="btn-primary-block" style="background:transparent;color:var(--muted);box-shadow:none;margin-top:8px;" onclick="closeModal()">Skip</button>
+  </div>
+</div>
+
+<script>
+  let activeTaskId = null;
+  let activeTaskTitle = "";
+
+  function categoryPill(cat){
+    const map = { general: 'pill', breathing: 'pill-teal', social: 'pill-amber', wellness: 'pill-teal' };
+    return `<span class="pill ${map[cat] || ''}">${cat}</span>`;
+  }
+
+  function renderTasks(tasks){
+    const grid = document.getElementById('taskGrid');
+    if (!tasks.length){ grid.innerHTML = '<p class="empty-note">No tasks available right now.</p>'; return; }
+    grid.innerHTML = tasks.map(t => `
+      <div class="card">
+        <div class="panel-head"><h3 style="font-size:15px;">${t.title}</h3>${categoryPill(t.category)}</div>
+        <p style="font-size:13.5px;color:var(--muted);margin-bottom:14px;line-height:1.55;">${t.description}</p>
+        <div class="experiment-meta">
+          <span class="pill">${t.duration_minutes} min</span>
+          <span class="pill pill-amber">Effort: ${t.effort}</span>
+          <span class="pill pill-teal">Impact: ${t.impact}</span>
+        </div>
+        <button class="btn-try" style="width:100%;padding:10px 0;" onclick="openModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')">Mark as done</button>
+      </div>
+    `).join('');
+  }
+
+  function openModal(id, title){
+    activeTaskId = id; activeTaskTitle = title;
+    document.getElementById('outcomeTaskTitle').textContent = title;
+    document.getElementById('outcomeModal').style.display = 'flex';
+  }
+  function closeModal(){
+    document.getElementById('outcomeModal').style.display = 'none';
+    activeTaskId = null;
+  }
+
+  async function submitOutcome(){
+    if (!activeTaskId) return;
+    const before = Number(document.getElementById('beforeSlider').value);
+    const after = Number(document.getElementById('afterSlider').value);
+    const btn = document.getElementById('outcomeSubmitBtn');
+    btn.textContent = 'Saving...'; btn.disabled = true;
+    try {
+      await completeTask(activeTaskId, before, after);
+      closeModal();
+      loadHistory();
+    } catch (err) {
+      alert(err.message || 'Could not save this outcome.');
+    } finally {
+      btn.textContent = 'Save outcome'; btn.disabled = false;
+    }
+  }
+
+  async function loadHistory(){
+    try {
+      const { history } = await getTaskHistory();
+      const el = document.getElementById('taskHistory');
+      if (!history.length){ el.innerHTML = '<p class="empty-note">No completed tasks yet.</p>'; return; }
+      el.innerHTML = history.map(h => `
+        <div class="entry-row">
+          <div class="entry-row-head">
+            <span style="font-weight:700;font-size:13.5px;">${h.task}</span>
+            <span class="entry-time">${new Date(h.timestamp).toLocaleString()}</span>
+          </div>
+          ${h.craving_before !== null && h.craving_after !== null
+            ? `<p>Craving: ${h.craving_before} → ${h.craving_after}</p>`
+            : `<p>Completed</p>`}
+        </div>
+      `).join('');
+    } catch (err) { /* fine if empty */ }
+  }
+
+  (async function init(){
+    renderAppNav('tasks');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+
+    try {
+      const tasks = await getTasks();
+      renderTasks(tasks);
+    } catch (err) {
+      document.getElementById('taskGrid').innerHTML = '<p class="empty-note">Could not load tasks right now.</p>';
+    }
+    loadHistory();
+  })();
+</script>
+
+</body>
+</html>

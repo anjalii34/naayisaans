@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Check-in — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo">
+      <span class="logo-mark"></span>
+      NayiSaans
+    </a>
+    <div class="app-bar-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="userInitial">U</div>
+        <span id="userName">User</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="checkin-shell">
+
+  <div class="checkin-head">
+    <h1>Daily Check-in</h1>
+    <p>Log where you're at right now — it takes under a minute.</p>
+  </div>
+
+  <div class="checkin-confirm" id="checkinConfirm">
+    <div class="confirm-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+    </div>
+    <div>
+      <h4>Check-in saved</h4>
+      <p>Your recovery twin has been updated. <a href="dashboard.html" style="color:var(--blue-primary);font-weight:600;">Back to dashboard →</a></p>
+    </div>
+  </div>
+
+  <div class="quicklog-grid">
+    <div class="quicklog-btn ql-smoked" id="btnSmoked" onclick="selectQuickLog('smoked')">
+      <div class="quicklog-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+      </div>
+      <h3>I smoked</h3>
+      <p>Log a cigarette — no judgement, just data.</p>
+    </div>
+    <div class="quicklog-btn ql-resisted" id="btnResisted" onclick="selectQuickLog('resisted')">
+      <div class="quicklog-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+      </div>
+      <h3>I had a craving (resisted)</h3>
+      <p>That's real progress — log the win.</p>
+    </div>
+  </div>
+
+  <div class="checkin-form-panel" id="checkinFormPanel">
+    <div class="stress-slider-wrap">
+      <label for="stressSlider">How stressed do you feel right now?</label>
+      <input type="range" id="stressSlider" class="stress-slider" min="1" max="5" value="3" oninput="updateStressDisplay(this.value)">
+      <div class="stress-labels">
+        <span>Calm</span>
+        <span>Very stressed</span>
+      </div>
+      <div class="stress-value-display" id="stressValueDisplay">Moderate (3/5)</div>
+    </div>
+
+    <div class="field">
+      <label>What's going on right now?</label>
+      <div class="mood-chip-grid" id="moodChips">
+        <div class="chip" data-value="stress">Stressed</div>
+        <div class="chip" data-value="social">Socialising</div>
+        <div class="chip" data-value="bored">Bored</div>
+        <div class="chip" data-value="tired">Tired</div>
+        <div class="chip" data-value="after_meal">After a meal</div>
+        <div class="chip" data-value="good">Feeling good</div>
+      </div>
+    </div>
+
+    <div class="checkin-note">
+      <label for="checkinNote">Anything else? (optional)</label>
+      <textarea id="checkinNote" placeholder="Write a quick note if you'd like..."></textarea>
+    </div>
+
+    <button class="btn-submit-checkin" id="checkinSubmitBtn" onclick="handleCheckinSubmit()">Save Check-in</button>
+  </div>
+
+  <div class="history-panel">
+    <h3>Today so far</h3>
+    <div class="history-list" id="historyList"><!-- injected by JS --></div>
+  </div>
+
+</div>
+
+<script>
+  let selectedType = null;
+
+  function selectQuickLog(type){
+    selectedType = type;
+    document.getElementById('btnSmoked').classList.toggle('selected', type === 'smoked');
+    document.getElementById('btnResisted').classList.toggle('selected', type === 'resisted');
+    document.getElementById('checkinFormPanel').classList.add('visible');
+    document.getElementById('checkinConfirm').classList.remove('visible');
+  }
+
+  function updateStressDisplay(val){
+    const labels = { 1: 'Very calm', 2: 'Calm', 3: 'Moderate', 4: 'Stressed', 5: 'Very stressed' };
+    document.getElementById('stressValueDisplay').textContent = `${labels[val]} (${val}/5)`;
+  }
+
+  document.getElementById('moodChips').addEventListener('click', function(e){
+    if(e.target.classList.contains('chip')){
+      e.target.classList.toggle('selected');
+    }
+  });
+
+  async function loadHistory(){
+    try {
+      const { history } = await getCheckinsToday();
+      renderHistory(history);
+    } catch (err) {
+      renderHistory([]);
+    }
+  }
+
+  function renderHistory(history){
+    const list = document.getElementById('historyList');
+    list.innerHTML = '';
+    if(!history || history.length === 0){
+      list.innerHTML = '<p style="font-size:13.5px;color:var(--muted);">No check-ins yet today.</p>';
+      return;
+    }
+    history.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'history-item';
+      el.innerHTML = `
+        <div class="history-dot ${item.type}"></div>
+        <div class="history-time">${item.time}</div>
+        <div class="history-desc">${item.desc}</div>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  async function handleCheckinSubmit(){
+    if(!selectedType){
+      alert('Please select "I smoked" or "I had a craving" first.');
+      return;
+    }
+
+    const stress = document.getElementById('stressSlider').value;
+    const selectedMoods = Array.from(document.querySelectorAll('#moodChips .chip.selected')).map(c => c.dataset.value);
+    const note = document.getElementById('checkinNote').value.trim();
+
+    const submitBtn = document.getElementById('checkinSubmitBtn');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Saving...';
+    submitBtn.disabled = true;
+
+    try {
+      await submitCheckinRequest({ type: selectedType, stress, moods: selectedMoods, note });
+      await loadHistory();
+
+      // reset form
+      document.getElementById('checkinFormPanel').classList.remove('visible');
+      document.getElementById('btnSmoked').classList.remove('selected');
+      document.getElementById('btnResisted').classList.remove('selected');
+      document.querySelectorAll('#moodChips .chip.selected').forEach(c => c.classList.remove('selected'));
+      document.getElementById('checkinNote').value = '';
+      document.getElementById('stressSlider').value = 3;
+      updateStressDisplay(3);
+      selectedType = null;
+
+      document.getElementById('checkinConfirm').classList.add('visible');
+    } catch (err) {
+      alert(err.message || 'Could not save your check-in. Please try again.');
+    } finally {
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    }
+  }
+
+  (async function initUser(){
+    renderAppNav('dashboard');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) {
+      window.location.href = 'login.html';
+      return;
+    }
+    try {
+      const { user } = await getCurrentUser();
+      const name = user.full_name || user.email || "User";
+      document.getElementById('userName').textContent = name;
+      document.getElementById('userInitial').textContent = name.charAt(0).toUpperCase();
+    } catch (err) {
+      // token may be stale — send back to login
+      window.location.href = 'login.html';
+    }
+    loadHistory();
+  })();
+</script>
+
+</body>
+</html>

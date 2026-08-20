@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triggers — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+</head>
+<body>
+
+<div class="app-bar">
+  <div class="wrap app-bar-inner">
+    <a href="dashboard.html" class="logo"><span class="logo-mark"></span>NayiSaans</a>
+    <div class="app-bar-right">
+      <div class="user-chip"><div class="user-avatar" id="userInitial">U</div><span id="userName">Loading...</span></div>
+    </div>
+  </div>
+</div>
+<div id="appNavMount"></div>
+
+<div class="page-shell narrow">
+  <div class="page-head">
+    <div class="eyebrow">Name it to plan for it</div>
+    <h1>Triggers</h1>
+    <p>Turn vague patterns into named, understandable situations you can plan around.</p>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>From your onboarding</h3></div>
+    <div class="chip-row" id="onboardTriggers"><!-- injected --></div>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>Add a trigger</h3></div>
+    <div class="field">
+      <label for="triggerName">What triggers you?</label>
+      <input type="text" id="triggerName" placeholder="e.g. Post-lunch coffee break">
+    </div>
+    <div class="field">
+      <label for="triggerCategory">Category</label>
+      <select id="triggerCategory">
+        <option value="situational">Situational</option>
+        <option value="emotional">Emotional</option>
+        <option value="social">Social</option>
+        <option value="routine">Routine</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="triggerNotes">Notes (optional)</label>
+      <textarea id="triggerNotes" placeholder="Anything that helps you recognise it next time..."></textarea>
+    </div>
+    <button class="btn-primary-block" id="submitBtn" onclick="submitTrigger()">Add trigger</button>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>Your triggers</h3></div>
+    <div class="entry-list" id="triggerList"><!-- injected --></div>
+  </div>
+</div>
+
+<script>
+  async function submitTrigger(){
+    const name = document.getElementById('triggerName').value.trim();
+    if (!name){ alert('Name the trigger first.'); return; }
+    const category = document.getElementById('triggerCategory').value;
+    const notes = document.getElementById('triggerNotes').value.trim() || null;
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = 'Saving...'; btn.disabled = true;
+    try {
+      await addTrigger({ name, category, notes });
+      document.getElementById('triggerName').value = '';
+      document.getElementById('triggerNotes').value = '';
+      loadTriggers();
+    } catch (err) {
+      alert(err.message || 'Could not add this trigger.');
+    } finally {
+      btn.textContent = 'Add trigger'; btn.disabled = false;
+    }
+  }
+
+  async function removeTrigger(id){
+    try { await deleteTrigger(id); loadTriggers(); } catch (err) { alert(err.message || 'Could not remove.'); }
+  }
+
+  async function loadTriggers(){
+    try {
+      const data = await getTriggers();
+      const onboard = document.getElementById('onboardTriggers');
+      onboard.innerHTML = (data.onboarding_triggers || []).length
+        ? data.onboarding_triggers.map(t => `<span class="pill">${t}</span>`).join('')
+        : '<p class="empty-note">None recorded during onboarding.</p>';
+
+      const list = document.getElementById('triggerList');
+      const custom = data.custom_triggers || [];
+      if (!custom.length){ list.innerHTML = '<p class="empty-note">No custom triggers yet.</p>'; return; }
+      list.innerHTML = custom.map(t => `
+        <div class="entry-row">
+          <div class="entry-row-head">
+            <span style="font-weight:700;font-size:13.5px;">${t.name}</span>
+            <span class="pill pill-amber">${t.category}</span>
+          </div>
+          ${t.notes ? `<p>${t.notes}</p>` : ''}
+          <button class="btn-try" style="margin-top:10px;" onclick="removeTrigger(${t.id})">Remove</button>
+        </div>
+      `).join('');
+    } catch (err) { /* ok if empty */ }
+  }
+
+  (async function init(){
+    renderAppNav('triggers');
+    if (typeof isLoggedIn !== 'function' || !isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const { user } = await getCurrentUser();
+      document.getElementById('userName').textContent = user.full_name || user.email;
+      document.getElementById('userInitial').textContent = (user.full_name || user.email).charAt(0).toUpperCase();
+    } catch (e) { window.location.href = 'login.html'; return; }
+    loadTriggers();
+  })();
+</script>
+
+</body>
+</html>

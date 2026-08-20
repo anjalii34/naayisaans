@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tell Us Your Story — NayiSaans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/api.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="logo">
+    <span class="logo-mark"></span>
+    NayiSaans
+  </a>
+  <a href="index.html" class="back-link">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/></svg>
+    Back to home
+  </a>
+</div>
+
+<div class="onboard-shell">
+
+  <div class="progress-track" id="progressTrack">
+    <div class="progress-step active" data-step="1">
+      <div class="progress-dot">1</div>
+    </div>
+    <div class="progress-line" id="line1"></div>
+    <div class="progress-step" data-step="2">
+      <div class="progress-dot">2</div>
+    </div>
+    <div class="progress-line" id="line2"></div>
+    <div class="progress-step" data-step="3">
+      <div class="progress-dot">3</div>
+    </div>
+  </div>
+
+  <div class="onboard-card">
+
+    <!-- STEP 1: smoking pattern -->
+    <div class="onboard-step active" data-step="1">
+      <div class="onboard-eyebrow">Step 1 of 3</div>
+      <h1>Tell us your smoking pattern</h1>
+      <p class="sub">This helps us build your personal nicotine-decay baseline. Just estimates — no judgement.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="cigsPerDay">Cigarettes per day</label>
+          <input type="number" id="cigsPerDay" placeholder="e.g. 10" min="0">
+        </div>
+        <div class="field">
+          <label for="yearsSmoking">Years smoking</label>
+          <input type="number" id="yearsSmoking" placeholder="e.g. 5" min="0">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="brandType">Usual type (optional)</label>
+        <select id="brandType">
+          <option value="">Prefer not to say</option>
+          <option value="regular">Regular cigarettes</option>
+          <option value="roll">Roll-your-own</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- STEP 2: daily rhythm & triggers -->
+    <div class="onboard-step" data-step="2">
+      <div class="onboard-eyebrow">Step 2 of 3</div>
+      <h1>Your daily rhythm</h1>
+      <p class="sub">When and why you usually smoke — this is what your AI twin uses to spot risky windows.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="firstCig">Usual time of first cigarette</label>
+          <input type="text" id="firstCig" placeholder="e.g. 8:00 AM">
+        </div>
+        <div class="field">
+          <label for="gapHours">Usual gap between cigarettes (hrs)</label>
+          <input type="number" id="gapHours" placeholder="e.g. 2" min="0" step="0.5">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>What usually triggers a craving?</label>
+        <div class="chip-grid" id="triggerChips">
+          <div class="chip" data-value="stress">Stress</div>
+          <div class="chip" data-value="meals">After meals</div>
+          <div class="chip" data-value="social">Socialising</div>
+          <div class="chip" data-value="boredom">Boredom</div>
+          <div class="chip" data-value="work">Work breaks</div>
+          <div class="chip" data-value="morning">Waking up</div>
+        </div>
+        <p class="hint">Pick as many as apply — you can change these anytime.</p>
+      </div>
+
+      <div class="field">
+        <label for="customTrigger">Something else? (optional)</label>
+        <input type="text" id="customTrigger" placeholder="Type your own trigger...">
+      </div>
+    </div>
+
+    <!-- STEP 3: your why -->
+    <div class="onboard-step" data-step="3">
+      <div class="onboard-eyebrow">Step 3 of 3</div>
+      <h1>Your why</h1>
+      <p class="sub">The reason you're doing this matters more than any number we show you.</p>
+
+      <div class="field">
+        <label for="quitReason">Why are you quitting?</label>
+        <textarea id="quitReason" placeholder="e.g. For my health, for my family..."></textarea>
+      </div>
+
+      <div class="field">
+        <label for="quitDate">Target quit date (optional)</label>
+        <input type="date" id="quitDate">
+      </div>
+    </div>
+
+    <div class="step-error" id="stepError"></div>
+
+    <div class="onboard-nav" id="onboardNav">
+      <button class="btn-back-step" id="backBtn" onclick="prevStep()" disabled>Back</button>
+      <button class="btn-next-step" id="nextBtn" onclick="nextStep()">Continue</button>
+    </div>
+
+    <!-- completion state -->
+    <div class="onboard-done" id="onboardDone">
+      <div class="done-icon">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+      </div>
+      <h2>You're all set</h2>
+      <p>Your recovery twin is ready. Your dashboard is being built next — for now, thank you for taking the first step.</p>
+      <a href="dashboard.html" class="btn btn-primary">Go to your dashboard →</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let currentStep = 1;
+  const totalSteps = 3;
+
+  // guard: onboarding requires a logged-in user
+  if (typeof isLoggedIn === 'function' && !isLoggedIn()) {
+    window.location.href = 'login.html';
+  }
+
+  function updateProgress(){
+    document.querySelectorAll('.progress-step').forEach(el=>{
+      const step = parseInt(el.dataset.step);
+      el.classList.remove('active','done');
+      if(step < currentStep) el.classList.add('done');
+      else if(step === currentStep) el.classList.add('active');
+    });
+    document.getElementById('line1').classList.toggle('filled', currentStep > 1);
+    document.getElementById('line2').classList.toggle('filled', currentStep > 2);
+  }
+
+  function showStep(step){
+    clearStepError();
+    document.querySelectorAll('.onboard-step').forEach(el=>{
+      el.classList.toggle('active', parseInt(el.dataset.step) === step);
+    });
+    document.getElementById('backBtn').disabled = step === 1;
+    document.getElementById('nextBtn').textContent = step === totalSteps ? 'Finish' : 'Continue';
+    updateProgress();
+  }
+
+  function showStepError(msg){
+    const el = document.getElementById('stepError');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+  function clearStepError(){
+    const el = document.getElementById('stepError');
+    el.textContent = '';
+    el.classList.remove('visible');
+  }
+
+  function validateStep(step){
+    clearStepError();
+
+    if(step === 1){
+      const cigs = document.getElementById('cigsPerDay').value.trim();
+      const years = document.getElementById('yearsSmoking').value.trim();
+      if(!cigs || !years){
+        showStepError('Please fill in cigarettes per day and years smoking.');
+        return false;
+      }
+    }
+
+    if(step === 2){
+      const firstCig = document.getElementById('firstCig').value.trim();
+      const gapHours = document.getElementById('gapHours').value.trim();
+      const hasChip = document.querySelectorAll('#triggerChips .chip.selected').length > 0;
+      const customTrigger = document.getElementById('customTrigger').value.trim();
+
+      if(!firstCig || !gapHours){
+        showStepError('Please fill in your usual smoking time and gap.');
+        return false;
+      }
+      if(!hasChip && !customTrigger){
+        showStepError('Please select at least one trigger, or type your own.');
+        return false;
+      }
+    }
+
+    if(step === 3){
+      const reason = document.getElementById('quitReason').value.trim();
+      if(!reason){
+        showStepError('Please tell us why you\'re quitting.');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  async function nextStep(){
+    if(!validateStep(currentStep)) return;
+
+    if(currentStep < totalSteps){
+      currentStep++;
+      showStep(currentStep);
+      return;
+    }
+
+    // final step — save to backend
+    const nextBtn = document.getElementById('nextBtn');
+    const originalText = nextBtn.textContent;
+    nextBtn.textContent = 'Saving...';
+    nextBtn.disabled = true;
+
+    const triggers = Array.from(document.querySelectorAll('#triggerChips .chip.selected'))
+      .map(c => c.dataset.value);
+
+    try {
+      await submitOnboarding({
+        cigs_per_day: Number(document.getElementById('cigsPerDay').value),
+        years_smoking: Number(document.getElementById('yearsSmoking').value),
+        brand_type: document.getElementById('brandType').value || null,
+        first_cig_time: document.getElementById('firstCig').value.trim(),
+        gap_hours: Number(document.getElementById('gapHours').value),
+        triggers: triggers,
+        custom_trigger: document.getElementById('customTrigger').value.trim() || null,
+        quit_reason: document.getElementById('quitReason').value.trim(),
+        quit_date: document.getElementById('quitDate').value || null,
+      });
+
+      document.getElementById('onboardNav').style.display = 'none';
+      document.querySelectorAll('.onboard-step').forEach(el => el.classList.remove('active'));
+      document.getElementById('onboardDone').classList.add('active');
+    } catch (err) {
+      showStepError(err.message || 'Could not save your info. Please try again.');
+      nextBtn.textContent = originalText;
+      nextBtn.disabled = false;
+    }
+  }
+
+  function prevStep(){
+    if(currentStep > 1){
+      currentStep--;
+      showStep(currentStep);
+    }
+  }
+
+  // trigger chip toggle
+  document.getElementById('triggerChips').addEventListener('click', function(e){
+    if(e.target.classList.contains('chip')){
+      e.target.classList.toggle('selected');
+    }
+  });
+
+  showStep(currentStep);
+</script>
+
+</body>
+</html>
