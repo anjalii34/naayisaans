@@ -48,23 +48,26 @@ async function apiRequest(path, method = "GET", body = null, auth = false) {
 }
 
 // ---------- auth ----------
-async function signup(fullName, email, password) {
-  const data = await apiRequest("/signup", "POST", {
-    full_name: fullName,
-    email: email,
-    password: password,
-  });
+// ---------- auth ----------
+async function sendSignupOtp(fullName, email, password, phone) {
+  return apiRequest("/signup/send-otp", "POST", { full_name: fullName, email, password, phone });
+}
+async function verifySignupOtp(fullName, email, password, phone, code) {
+  const data = await apiRequest("/signup/verify-otp", "POST", { full_name: fullName, email, password, phone, code });
   if (data && data.token) saveToken(data.token);
   return data;
 }
 
 async function login(email, password) {
-  const data = await apiRequest("/login", "POST", {
-    email: email,
-    password: password,
-  });
+  return apiRequest("/login", "POST", { email, password });
+}
+async function verifyLoginOtp(userId, code) {
+  const data = await apiRequest("/login/verify-otp", "POST", { user_id: userId, code });
   if (data && data.token) saveToken(data.token);
   return data;
+}
+async function resendLoginOtp(userId) {
+  return apiRequest("/login/resend-otp", "POST", { user_id: userId });
 }
 
 async function getCurrentUser() {

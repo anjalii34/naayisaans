@@ -8,6 +8,7 @@ numpy
 python-multipart
 email-validator
 pydantic
+twilio
 
 # Optional — only needed for production / extra features. Install separately
 # if your machine has build tools available:

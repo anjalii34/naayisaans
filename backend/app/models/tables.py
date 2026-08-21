@@ -11,6 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
+    phone = Column(String, nullable=True)          # ← add this line
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -177,3 +178,13 @@ class UserSettings(Base):
     recovery_goal = Column(String, nullable=True)
     privacy_share_analytics = Column(Integer, default=1)   # 0/1
     updated_at = Column(DateTime, default=datetime.utcnow)
+
+class LoginOtp(Base):
+    __tablename__ = "login_otps"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    code = Column(String, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Integer, default=0)
+    attempts = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -7,8 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="assets/css/style.css">
-<script src="assets/js/api.js" ></script>
+<script src="assets/js/api.js"></script>
 </head>
 <body class="mode-login">
 
@@ -32,15 +31,20 @@
       <p class="sub" id="formSub">Continue your recovery journey right where you left off.</p>
 
       <div class="tabs">
-        <button class="tab active" id="tabLogin" onclick="setMode('login')">Log in</button>
-        <button class="tab" id="tabSignup" onclick="setMode('signup')">Sign up</button>
+        <button type="button" class="tab active" id="tabLogin" onclick="setMode('login')">Log in</button>
+        <button type="button" class="tab" id="tabSignup" onclick="setMode('signup')">Sign up</button>
       </div>
 
-      <form onsubmit="return false;">
+      <form id="authForm" novalidate>
 
         <div class="field signup-only">
           <label for="fullName">Full name</label>
           <input type="text" id="fullName" placeholder="Enter your name">
+        </div>
+
+        <div class="field signup-only">
+          <label for="phone">Phone number</label>
+          <input type="tel" id="phone" placeholder="+919876543210">
         </div>
 
         <div class="field">
@@ -68,8 +72,27 @@
 
         <button type="submit" class="btn-submit" id="submitBtn">Log in</button>
       </form>
+
+      <form id="otpForm" style="display:none;">
+        <div class="field">
+          <label for="otpCode">6-digit code</label>
+          <input type="text" id="otpCode" inputmode="numeric" maxlength="6" placeholder="000000">
+        </div>
+        <div style="font-size:13px;margin:-4px 0 14px;">Check backend terminal — <a href="#" id="resendOtpLink">resend code</a></div>
+        <button type="submit" class="btn-submit" id="otpSubmitBtn">Verify and log in</button>
+      </form>
+
+      <form id="signupOtpForm" style="display:none;">
+        <div class="field">
+          <label for="signupOtpCode">6-digit code</label>
+          <input type="text" id="signupOtpCode" inputmode="numeric" maxlength="6" placeholder="000000">
+        </div>
+        <div style="font-size:13px;margin:-4px 0 14px;">Code sent to your phone</div>
+        <button type="submit" class="btn-submit" id="signupOtpSubmitBtn">Verify and create account</button>
+      </form>
+
       <div class="form-error" id="formError"></div>
-      
+
       <div class="privacy-note">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
         Your data stays private, always.
@@ -146,8 +169,12 @@
     el.classList.remove('visible');
   }
 
-  document.querySelector('form').addEventListener('submit', async function(e){
+  let pendingUserId = null;
+  let pendingSignup = null;
+
+  document.getElementById('authForm').addEventListener('submit', async function(e){
     e.preventDefault();
+    e.stopPropagation();
     clearFormError();
 
     const isSignup = document.body.classList.contains('mode-signup');
@@ -160,11 +187,18 @@
       return;
     }
 
+    let fullName = '';
+    let phone = '';
     if(isSignup){
-      const fullName = document.getElementById('fullName').value.trim();
+      fullName = document.getElementById('fullName').value.trim();
+      phone = document.getElementById('phone').value.trim();
       const confirmPassword = document.getElementById('confirmPassword').value;
       if(!fullName){
         showFormError('Please enter your name.');
+        return;
+      }
+      if(!phone){
+        showFormError('Please enter your phone number.');
         return;
       }
       if(password !== confirmPassword){
@@ -179,19 +213,66 @@
 
     try{
       if(isSignup){
-        await signup(document.getElementById('fullName').value.trim(), email, password);
+        pendingSignup = { fullName, email, password, phone };
+        await sendSignupOtp(pendingSignup.fullName, pendingSignup.email, pendingSignup.password, pendingSignup.phone);
+        document.getElementById('authForm').style.display = 'none';
+        document.getElementById('signupOtpForm').style.display = 'block';
+        document.getElementById('signupOtpCode').focus();
       } else {
-        await login(email, password);
+        const result = await login(email, password);
+        pendingUserId = result.user_id;
+        document.getElementById('authForm').style.display = 'none';
+        document.getElementById('otpForm').style.display = 'block';
+        document.getElementById('otpCode').focus();
       }
-      window.location.href = 'onboard.html';
     } catch(err){
       showFormError(err.message || 'Something went wrong. Please try again.');
       submitBtn.textContent = originalText;
       submitBtn.disabled = false;
     }
   });
-</script>
 
+  document.getElementById('otpForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    clearFormError();
+    const code = document.getElementById('otpCode').value.trim();
+    if(!/^\d{6}$/.test(code)){ showFormError('Enter the 6-digit code.'); return; }
+    const btn = document.getElementById('otpSubmitBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Verifying...'; btn.disabled = true;
+    try{
+      await verifyLoginOtp(pendingUserId, code);
+      window.location.href = 'onboard.html';
+    } catch(err){
+      showFormError(err.message || 'Something went wrong. Please try again.');
+      btn.textContent = original; btn.disabled = false;
+    }
+  });
+
+  document.getElementById('resendOtpLink').addEventListener('click', async function(e){
+    e.preventDefault();
+    if(!pendingUserId) return;
+    try{ await resendLoginOtp(pendingUserId); showFormError('New code sent.'); }
+    catch(err){ showFormError(err.message || 'Could not resend code.'); }
+  });
+
+  document.getElementById('signupOtpForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    clearFormError();
+    const code = document.getElementById('signupOtpCode').value.trim();
+    if(!/^\d{6}$/.test(code)){ showFormError('Enter the 6-digit code.'); return; }
+    const btn = document.getElementById('signupOtpSubmitBtn');
+    const original = btn.textContent;
+    btn.textContent = 'Verifying...'; btn.disabled = true;
+    try{
+      await verifySignupOtp(pendingSignup.fullName, pendingSignup.email, pendingSignup.password, pendingSignup.phone, code);
+      window.location.href = 'onboard.html';
+    } catch(err){
+      showFormError(err.message || 'Something went wrong.');
+      btn.textContent = original; btn.disabled = false;
+    }
+  });
+</script>
 
 </body>
 </html>

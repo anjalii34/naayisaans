@@ -7,11 +7,42 @@ class SignupRequest(BaseModel):
     full_name: str
     email: EmailStr
     password: str
+    phone: str
+
+
+class SendSignupOtpRequest(BaseModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    phone: str
+
+
+class VerifySignupOtpRequest(BaseModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    phone: str
+    code: str
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+class LoginStepResponse(BaseModel):
+    otp_required: bool = True
+    user_id: int
+    message: str = "Enter the 6-digit code to finish signing in."
+
+
+class VerifyOtpRequest(BaseModel):
+    user_id: int
+    code: str
+
+
+class ResendOtpRequest(BaseModel):
+    user_id: int
 
 
 class UserOut(BaseModel):
@@ -70,7 +101,7 @@ class DashboardResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# New schemas — Tasks, Cravings, Journal, Triggers, Coach, Settings, Analytics
+# New schemas - Tasks, Cravings, Journal, Triggers, Coach, Settings, Analytics
 # ---------------------------------------------------------------------------
 
 class TaskOut(BaseModel):

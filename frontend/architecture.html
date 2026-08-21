@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NayiSaans — Architecture &amp; Data Flow</title>
+<style>
+  :root{
+    --navy:#1e3a5f; --navy-bg:#eaf0f7; --navy-border:#8fa9c7;
+    --teal:#0f6e56; --teal-bg:#e1f5ee; --teal-border:#5dcaa5;
+    --purple:#3c3489; --purple-bg:#eeedfe; --purple-border:#afa9ec;
+    --grey:#444441; --grey-bg:#f1efe8; --grey-border:#b4b2a9;
+    --coral:#993c1d; --coral-bg:#faece7; --coral-border:#f0997b;
+    --ink:#1c1c1a; --sub:#5f5e5a; --page:#fbfaf7; --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:32px 16px 80px; background:var(--page);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+  }
+  .wrap{max-width:1180px; margin:0 auto;}
+  h1{font-size:26px; font-weight:700; margin:0 0 4px;}
+  .subtitle{color:var(--sub); font-size:15px; margin:0 0 18px; max-width:820px;}
+  .disclaimers{
+    background:#fff; border:1px solid var(--grey-border); border-radius:10px;
+    padding:14px 18px; margin-bottom:28px; font-size:13px; color:var(--sub);
+  }
+  .disclaimers ul{margin:6px 0 0; padding-left:18px;}
+  .disclaimers li{margin-bottom:3px;}
+  .legend{display:flex; flex-wrap:wrap; gap:14px; margin-bottom:30px; font-size:13px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:12px; height:12px; border-radius:3px; display:inline-block;}
+
+  .layer{margin-bottom:6px; border-radius:14px; padding:18px 20px; position:relative;}
+  .layer-label{
+    font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    margin-bottom:10px; opacity:.85;
+  }
+  .cards{display:flex; flex-wrap:wrap; gap:12px;}
+  .card{
+    background:var(--card); border-radius:10px; padding:12px 14px;
+    box-shadow:0 1px 2px rgba(0,0,0,.06); flex:1 1 200px; min-width:170px;
+  }
+  .card h4{margin:0 0 4px; font-size:13.5px; font-weight:700;}
+  .card p, .card ul{margin:0; font-size:12px; color:var(--sub); line-height:1.5;}
+  .card ul{padding-left:16px;}
+  .card code{font-family:Consolas,monospace; font-size:11.5px; background:rgba(0,0,0,.05); padding:1px 4px; border-radius:4px;}
+
+  .arrow-down{display:flex; justify-content:center; margin:2px 0;}
+  .arrow-down svg{display:block;}
+
+  /* layer color themes */
+  .l-navy{background:var(--navy-bg); border:1px solid var(--navy-border);}
+  .l-navy .layer-label{color:var(--navy);}
+  .l-teal{background:var(--teal-bg); border:1px solid var(--teal-border);}
+  .l-teal .layer-label{color:var(--teal);}
+  .l-purple{background:var(--purple-bg); border:1px solid var(--purple-border);}
+  .l-purple .layer-label{color:var(--purple);}
+  .l-grey{background:var(--grey-bg); border:1px solid var(--grey-border);}
+  .l-grey .layer-label{color:var(--grey);}
+  .l-coral{background:var(--coral-bg); border:1px solid var(--coral-border);}
+  .l-coral .layer-label{color:var(--coral);}
+
+  .twin-box{
+    background:var(--teal); color:#fff; border-radius:14px; padding:20px;
+    text-align:center; margin:4px auto 14px; max-width:520px;
+  }
+  .twin-box h3{margin:0 0 4px; font-size:16px;}
+  .twin-box p{margin:0; font-size:12.5px; opacity:.9;}
+
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media(max-width:820px){.two-col{grid-template-columns:1fr;}}
+
+  .physio-branch{
+    border:1px dashed var(--navy-border); border-radius:12px; padding:14px 16px;
+    background:#fff; font-size:12px; color:var(--sub);
+  }
+  .physio-branch .steps{display:flex; flex-direction:column; gap:6px; margin:8px 0;}
+  .physio-branch .steps div{
+    background:var(--navy-bg); border:1px solid var(--navy-border); border-radius:8px;
+    padding:6px 10px; font-size:12px; color:var(--navy);
+  }
+  .privacy-note{
+    margin-top:10px; font-size:11.5px; font-weight:600; color:var(--coral);
+    background:var(--coral-bg); border:1px solid var(--coral-border);
+    padding:6px 10px; border-radius:8px;
+  }
+
+  .note{
+    font-size:12px; color:var(--sub); font-style:italic; margin-top:10px;
+    padding:8px 12px; background:rgba(255,255,255,.6); border-radius:8px;
+  }
+
+  .dashed-note{
+    border:1px dashed var(--purple-border); border-radius:10px; padding:10px 14px;
+    font-size:12px; color:var(--purple); background:#fff; margin-top:10px;
+  }
+
+  h2.section-title{
+    font-size:19px; margin:50px 0 18px; padding-top:10px;
+    border-top:1px solid var(--grey-border);
+  }
+
+  .flow{
+    display:flex; align-items:stretch; gap:0; flex-wrap:wrap;
+    background:#fff; border:1px solid var(--grey-border); border-radius:12px;
+    padding:16px; margin-bottom:20px;
+  }
+  .flow .step{
+    flex:1 1 140px; padding:10px 12px; font-size:12.5px; text-align:center;
+    border-radius:8px; background:var(--purple-bg); color:var(--purple);
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--purple-border);
+  }
+  .flow .step.teal{background:var(--teal-bg); color:var(--teal); border-color:var(--teal-border);}
+  .flow .step.grey{background:var(--grey-bg); color:var(--grey); border-color:var(--grey-border);}
+  .flow .step.coral{background:var(--coral-bg); color:var(--coral); border-color:var(--coral-border);}
+  .flow .arrow{
+    flex:0 0 30px; display:flex; align-items:center; justify-content:center;
+    color:var(--sub); font-size:16px;
+  }
+
+  footer{
+    margin-top:50px; text-align:center; font-size:12px; color:var(--sub);
+    border-top:1px solid var(--grey-border); padding-top:16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>NayiSaans: Complete Architecture and Digital Twin Data Flow</h1>
+  <p class="subtitle">An Explainable Digital Twin for Smoke-Free Recovery</p>
+
+  <div class="disclaimers">
+    <strong>Accuracy notes for reviewers</strong>
+    <ul>
+      <li>Experimental recovery-support prototype — not a medical device.</li>
+      <li>Nicotine exposure and webcam heart rate are estimates, not clinical measurements.</li>
+      <li>Craving-risk model trained on a literature-informed synthetic dataset (3,000 samples) — not clinically validated.</li>
+      <li>Recovery Coach is rule-based and state-aware, not an LLM.</li>
+      <li>Raw webcam video is never uploaded — only derived BPM and signal quality are sent to the backend.</li>
+    </ul>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--navy)"></span>Frontend</span>
+    <span><span class="dot" style="background:var(--teal)"></span>Digital Twin &amp; models</span>
+    <span><span class="dot" style="background:var(--purple)"></span>Backend / API</span>
+    <span><span class="dot" style="background:var(--grey)"></span>Database</span>
+    <span><span class="dot" style="background:var(--coral)"></span>Elevated-risk alerts only</span>
+  </div>
+
+  <!-- 1. USER LAYER -->
+  <div class="layer l-navy">
+    <div class="layer-label">1 · User layer</div>
+    <div class="cards">
+      <div class="card"><h4>User / Browser</h4>
+        <p>Signs up, onboards, logs check-ins &amp; cravings, completes tasks, journals, manages triggers, views analytics, optional physiology check.</p>
+      </div>
+    </div>
+  </div>
+  <div class="arrow-down">↓</div>
+
+  <!-- 2. FRONTEND LAYER + 3. PHYSIOLOGY BRANCH -->
+  <div class="layer l-navy">
+    <div class="layer-label">2 · Frontend layer — HTML, CSS, vanilla JavaScript</div>
+    <div class="two-col">
+      <div>
+        <div class="cards">
+          <div class="card"><h4>Public pages</h4>
+            <ul><li><code>index.html</code></li><li><code>login.html</code></li><li><code>onboard.html</code></li></ul>
+          </div>
+          <div class="card"><h4>Main app pages</h4>
+            <ul><li>Today Dashboard, Digital Twin</li><li>Daily Check-in, Physiology Check</li><li>Recovery Tasks, Wellness Lab</li><li>Cravings, Journal, Triggers</li><li>Analytics, Recovery Coach</li><li>My Journey, Timeline, Resources, Profile</li></ul>
+          </div>
+          <div class="card"><h4>Shared modules</h4>
+            <ul><li><code>api.js</code> — Fetch API + JSON client</li><li><code>nav.js</code> — shared navigation</li><li><code>rppg.js</code> — browser BPM estimator</li><li>SVG body illustration — twin visual</li><li><code>sessionStorage</code> — JWT token</li></ul>
+          </div>
+        </div>
+        <div class="note">Browser → api.js → HTTPS/REST JSON, header <code>Authorization: Bearer JWT</code></div>
+      </div>
+      <div class="physio-branch">
+        <strong style="color:var(--navy); font-size:13px;">Physiology branch — client-side only</strong>
+        <div class="steps">
+          <div>Webcam permission</div>
+          <div>15-second browser scan</div>
+          <div>Canvas API reads centre face region</div>
+          <div>Green-channel colour variation</div>
+          <div>Peak counting + quality check</div>
+          <div>Derived <code>{bpm, quality}</code></div>
+          <div><code>POST /physiology</code></div>
+        </div>
+        <div class="privacy-note">Raw video frames stay in browser memory; only BPM and quality are sent to server.</div>
+      </div>
+    </div>
+  </div>
+  <div class="arrow-down">↓</div>
+
+  <!-- 4. BACKEND LAYER -->
+  <div class="layer l-purple">
+    <div class="layer-label">4 · Backend layer — Python FastAPI</div>
+    <div class="cards">
+      <div class="card"><h4>Authentication</h4><ul><li><code>/signup</code> <code>/login</code> <code>/me</code></li></ul></div>
+      <div class="card"><h4>Onboarding</h4><ul><li><code>/onboarding</code></li></ul></div>
+      <div class="card"><h4>Daily check-in</h4><ul><li><code>/checkin</code></li><li><code>/checkins/today</code></li></ul></div>
+      <div class="card"><h4>Physiology</h4><ul><li><code>/physiology</code></li></ul></div>
+      <div class="card"><h4>Dashboard &amp; twin</h4><ul><li><code>/dashboard</code></li><li><code>/twin/state</code></li></ul></div>
+      <div class="card"><h4>Tasks &amp; wellness</h4><ul><li><code>/tasks</code></li><li><code>/tasks/{id}/complete</code></li><li><code>/wellness/experiments</code></li></ul></div>
+      <div class="card"><h4>Reflection</h4><ul><li><code>/cravings</code> <code>/journal</code> <code>/triggers</code></li></ul></div>
+      <div class="card"><h4>Insights</h4><ul><li><code>/analytics</code> <code>/journey</code> <code>/timeline</code></li></ul></div>
+      <div class="card"><h4>Support</h4><ul><li><code>/coach/message</code></li><li><code>/coach/history</code></li><li><code>/resources</code></li></ul></div>
+      <div class="card"><h4>Profile</h4><ul><li><code>/settings</code> <code>/account</code></li></ul></div>
+      <div class="card"><h4>Security</h4><ul><li>bcrypt password hashing</li><li>JWT authentication</li><li>Protected user-specific endpoints</li></ul></div>
+    </div>
+  </div>
+  <div class="arrow-down">↓</div>
+
+  <!-- 5. DIGITAL TWIN ENGINE -->
+  <div class="layer l-teal">
+    <div class="layer-label">5 · Digital twin engine — central brain</div>
+    <div class="twin-box">
+      <h3><code>recompute_twin(user_id)</code></h3>
+      <p>Runs after: onboarding completion · "I smoked" check-in · "I resisted" check-in · successful physiology/BPM check</p>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <h4>Inputs</h4>
+        <ul>
+          <li>Recovery profile: start date, quit reason</li>
+          <li>Substance profile: usual first-cigarette time</li>
+          <li>Usage logs: timestamps of logged cigarettes</li>
+          <li>Recent check-ins: stress, smoked/resisted pattern</li>
+          <li>Latest physiology log: BPM and signal quality</li>
+          <li>Current time of day</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Outputs → Twin State</h4>
+        <ul>
+          <li>Smoke-free streak, best streak</li>
+          <li>Nicotine exposure % + 12-hour series</li>
+          <li>Craving-risk %, risk level (low/moderate/high)</li>
+          <li>Confidence (low/moderate/high)</li>
+          <li>Top "why this risk" factors</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note">The twin updates after key logged events; it is not continuously recalculated in the background.</div>
+  </div>
+  <div class="arrow-down">↓</div>
+
+  <!-- 6. MODEL LAYER -->
+  <div class="layer l-teal">
+    <div class="layer-label">6 · Model layer</div>
+    <div class="cards">
+      <div class="card"><h4>A. Nicotine exposure model</h4>
+        <p><code>nicotine_model.py</code></p>
+        <ul>
+          <li>Exponential decay: C(t) = C₀ × e^(−kt)</li>
+          <li>Approx. half-life: 2 hours</li>
+          <li>Each cigarette creates a decay curve</li>
+          <li>Curves summed, capped at 100%</li>
+          <li>Outputs: current exposure + 12h chart</li>
+        </ul>
+        <div class="note" style="margin-top:8px;">Relative exposure estimate, not a blood test.</div>
+      </div>
+      <div class="card"><h4>B. Craving-risk ML model</h4>
+        <p><code>craving_model.py</code></p>
+        <ul>
+          <li>scikit-learn logistic regression</li>
+          <li>NumPy synthetic dataset: 3,000 samples, seed 42</li>
+          <li>Features: hour of day, usual-time match, days since last cigarette, stress 1–5, smoked/resisted ratio, HR deviation from 70 BPM</li>
+          <li>Outputs: risk %, level, confidence</li>
+          <li>Explainability: SHAP if available, else coefficient fallback</li>
+        </ul>
+        <div class="note" style="margin-top:8px;">e.g. "Reported stress increased your estimated risk."</div>
+      </div>
+      <div class="card"><h4>C. Webcam rPPG BPM estimator</h4>
+        <p><code>rppg.js</code></p>
+        <ul>
+          <li>Runs fully in browser</li>
+          <li>Green-channel pixel variation + peak counting</li>
+          <li>Rejects poor signal / bad lighting / implausible BPM</li>
+          <li>Outputs BPM + signal quality</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="arrow-down">↓</div>
+
+  <!-- 7. DATABASE LAYER -->
+  <div class="layer l-grey">
+    <div class="layer-label">7 · Database layer — SQLAlchemy ORM → SQLite (prototype)</div>
+    <div class="cards">
+      <div class="card"><h4>Identity</h4><ul><li>User</li></ul></div>
+      <div class="card"><h4>Personal baseline</h4><ul><li>RecoveryProfile</li><li>SubstanceProfile</li></ul></div>
+      <div class="card"><h4>Behaviour logs</h4><ul><li>UsageLog, CravingLog</li><li>CravingEntry, TriggerItem</li><li>JournalEntry</li></ul></div>
+      <div class="card"><h4>Physiology</h4><ul><li>PhysiologyLog</li></ul></div>
+      <div class="card"><h4>Twin</h4><ul><li>TwinState</li></ul></div>
+      <div class="card"><h4>Interventions &amp; progress</h4><ul><li>RecoveryTask, TaskCompletion</li><li>RecoveryEvent</li></ul></div>
+      <div class="card"><h4>Support &amp; settings</h4><ul><li>CoachMessage</li><li>UserSettings</li></ul></div>
+    </div>
+    <div class="note">PostgreSQL-ready for production.</div>
+  </div>
+  <div class="arrow-down">↓</div>
+
+  <!-- 8. OUTPUT / EXPERIENCE LAYER -->
+  <div class="layer l-navy">
+    <div class="layer-label">8 · Output / experience layer</div>
+    <div class="cards">
+      <div class="card"><h4>Today dashboard</h4><p>Streak, nicotine chart, risk score, confidence, "why"</p></div>
+      <div class="card"><h4>Digital twin</h4><p>Colour-coded SVG body visual</p></div>
+      <div class="card"><h4>Recovery tasks</h4><p>Prioritises breathing/wellness tasks when risk is moderate or high</p></div>
+      <div class="card"><h4>Analytics</h4><p>14-day craving/stress trends, task relief, smoked vs resisted counts</p></div>
+      <div class="card"><h4>My journey &amp; timeline</h4><p>Recovery history and milestones</p></div>
+      <div class="card"><h4>Recovery coach</h4><p>Rule-based responses grounded in current twin state</p></div>
+    </div>
+    <div class="dashed-note">
+      Dashed arrows: Detailed Craving Diary · Journal · Trigger Manager · Task Completion → Analytics, Timeline, Journey, Coach context.<br>
+      These supportive features currently improve history, analytics, and coaching context; they do not all directly feed the live craving-risk calculation yet.
+    </div>
+  </div>
+
+  <!-- FLOWS -->
+  <h2 class="section-title">Flow 1 — Signup and onboarding</h2>
+  <div class="flow">
+    <div class="step">User signs up</div><div class="arrow">→</div>
+    <div class="step">bcrypt hashes password</div><div class="arrow">→</div>
+    <div class="step">User record saved</div><div class="arrow">→</div>
+    <div class="step">JWT returned, saved in sessionStorage</div><div class="arrow">→</div>
+    <div class="step teal">Onboarding data saved</div><div class="arrow">→</div>
+    <div class="step teal">Twin engine runs</div><div class="arrow">→</div>
+    <div class="step">Dashboard becomes available</div>
+  </div>
+
+  <h2 class="section-title">Flow 2 — Daily check-in and twin update</h2>
+  <div class="flow">
+    <div class="step">User chooses "smoked" or "resisted"</div><div class="arrow">→</div>
+    <div class="step">Frontend: <code>POST /checkin</code></div><div class="arrow">→</div>
+    <div class="step grey">Backend saves CravingLog</div><div class="arrow">→</div>
+    <div class="step grey">If smoked, also save UsageLog</div><div class="arrow">→</div>
+    <div class="step teal">Twin recomputes nicotine, streak, risk, confidence, explanations</div><div class="arrow">→</div>
+    <div class="step">Dashboard &amp; twin show updated state</div>
+  </div>
+
+  <h2 class="section-title">Flow 3 — Risk to action</h2>
+  <div class="flow">
+    <div class="step coral">Twin predicts elevated risk</div><div class="arrow">→</div>
+    <div class="step">Dashboard shows top risk factors</div><div class="arrow">→</div>
+    <div class="step">Backend prioritises relevant recovery tasks</div><div class="arrow">→</div>
+    <div class="step">User completes task, logs craving before/after</div><div class="arrow">→</div>
+    <div class="step grey">TaskCompletion stored</div><div class="arrow">→</div>
+    <div class="step">Analytics calculates average craving relief over time</div>
+  </div>
+
+  <footer>
+    Privacy by design: raw webcam video is not stored. NayiSaans provides experimental estimates for recovery support, not diagnosis.
+  </footer>
+
+</div>
+</body>
+</html>
